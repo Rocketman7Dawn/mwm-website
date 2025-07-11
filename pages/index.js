@@ -6,7 +6,7 @@ export default function Home() {
     <div className={styles.container}>
       <Head>
         <title>Mindfulness with Mind</title>
-        <meta name="description" content="Mindfulness with Mind - AI for the conscious coach" />
+        <meta name="description" content="Mindfulness with Mind - AI for the conscious human" />
         <link rel="icon" href="/logo.png" />
       </Head>
 
