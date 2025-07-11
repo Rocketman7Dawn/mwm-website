@@ -13,7 +13,7 @@ export default function Home() {
       <main className={styles.main}>
         <h1 className={styles.title}>Welcome to Mindfulness with Mind</h1>
         <p className={styles.description}>
-          Supporting mindful businesses with gentle AI.
+          Supporting mindful businesses with holistic AI.
         </p>
       </main>
     </div>
