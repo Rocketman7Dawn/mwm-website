@@ -11,7 +11,11 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
+        {/* Logo image */}
+        <img src="/Logo.png" alt="Mindfulness with Mind Logo" style={{ maxWidth: '200px', marginBottom: '1rem' }} />
+
         <h1 className={styles.title}>Welcome to Mindfulness with Mind</h1>
+
         <p className={styles.description}>
           Supporting mindful businesses with holistic AI.
         </p>
