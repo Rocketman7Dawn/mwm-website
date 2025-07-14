@@ -1,38 +1,65 @@
-# Dependencies
-node_modules/
+# --------------------------------------------------
+# ✅ NODE & NEXT.JS DEPENDENCIES / BUILD OUTPUT
+# --------------------------------------------------
 
-# Build output
+node_modules/
 .next/
 out/
-
-# Production
 dist/
 
-# Environment files (keep secrets out of git)
-.env
-.env.*  # includes env.local, env.production, etc.
-!.env.example  # keep a sample for others
+# --------------------------------------------------
+# ✅ ENVIRONMENT FILES (NEVER TRACK SECRETS)
+# --------------------------------------------------
 
-# Logs
+.env
+.env.*             # .env.local, .env.production, etc.
+!.env.example      # Keep example file for others
+
+# --------------------------------------------------
+# ✅ LOG FILES
+# --------------------------------------------------
+
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
 
-# OS files
+# --------------------------------------------------
+# ✅ OS SYSTEM FILES
+# --------------------------------------------------
+
 .DS_Store
 Thumbs.db
 
-# Replit-specific
+# --------------------------------------------------
+# ✅ REPLIT-SPECIFIC FILES
+# --------------------------------------------------
+
 .replit
 *.replit
 .history/
 *.swp
 *.tmp
 
-# Supabase generated content (optional, if you don't want to track)
+# --------------------------------------------------
+# ✅ SUPABASE (OPTIONAL)
+# Comment out if you want to track these
+# --------------------------------------------------
+
 supabase/migrations/
 supabase/types/
 
-# Optional IDE folders
+# --------------------------------------------------
+# ✅ IDE / EDITOR CONFIG
+# --------------------------------------------------
+
 .vscode/
 .idea/
+
+# --------------------------------------------------
+# ✅ MAC / TEMP FILES
+# --------------------------------------------------
+
+*.bak
+*.old
+*.orig
+*.tmp
