@@ -1,0 +1,26 @@
+'use client'
+import Link from 'next/link'
+
+export default function HomePage() {
+  return (
+    <main style={{ textAlign: 'center', padding: '2rem' }}>
+      <h1>Welcome to Mindfulness with Mind</h1>
+      <p>Supporting mindful businesses with holistic AI.</p>
+
+      <Link href="/auth/signin">
+        <button style={{
+          marginTop: '2rem',
+          padding: '0.75rem 1.5rem',
+          fontSize: '1rem',
+          backgroundColor: '#4CAF50',
+          color: 'white',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: 'pointer'
+        }}>
+          Client Dashboard
+        </button>
+      </Link>
+    </main>
+  )
+}
