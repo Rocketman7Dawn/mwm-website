@@ -1,23 +1,39 @@
-'use client'
-
 import './globals.css'
-import { SessionProvider } from 'next-auth/react'
+import Link from 'next/link'
+
+export const metadata = {
+  title: 'Mindfulness with Mind',
+  description: 'Supporting mindful businesses with holistic AI.',
+}
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
-        <SessionProvider>
-          <main className="min-h-screen">
-            {children}
-          </main>
-          <footer className="mt-10 text-sm text-center text-gray-500 p-4">
-            <p>
-              <a href="/privacy" className="underline hover:text-black">Privacy Policy</a> | 
-              <a href="/terms" className="underline hover:text-black ml-2">Terms of Use</a>
-            </p>
-          </footer>
-        </SessionProvider>
+      <body style={{
+        margin: 0,
+        padding: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        fontFamily: 'sans-serif'
+      }}>
+        <main style={{ flexGrow: 1 }}>
+          {children}
+        </main>
+
+        <footer style={{
+          textAlign: 'center',
+          padding: '1rem',
+          fontSize: '0.9rem',
+          backgroundColor: '#f9f9f9'
+        }}>
+          <Link href="/privacy-policy" style={{ marginRight: '2rem' }}>
+            Privacy Policy
+          </Link>
+          <Link href="/terms-of-service">
+            Terms of Service
+          </Link>
+        </footer>
       </body>
     </html>
   )
