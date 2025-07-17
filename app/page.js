@@ -18,7 +18,7 @@ export default function HomePage() {
       </div>
 
       <h1>Welcome to Mindfulness with Mind</h1>
-      <p>Supporting mindful businesses with holistic AI.</p>
+      <p>Supporting mindful businesses with inspired AI.</p>
 
       <Link href="/auth/signin">
         <button style={{
