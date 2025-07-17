@@ -25,7 +25,7 @@ export default function HomePage() {
           marginTop: '2rem',
           padding: '0.75rem 1.5rem',
           fontSize: '1rem',
-          backgroundColor: '#4CAF50',
+          backgpre=roundColor: '#4CAF50',
           color: 'white',
           border: 'none',
           borderRadius: '5px',
