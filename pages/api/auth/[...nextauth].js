@@ -1,9 +1,9 @@
 // pages/api/auth/[...nextauth].js
 import NextAuth from "next-auth";
 import { SupabaseAdapter } from "@next-auth/supabase-adapter";
-import Email from "next-auth/providers/email";
-import Google from "next-auth/providers/google";
-import Credentials from "next-auth/providers/credentials";
+import EmailProvider from "next-auth/providers/email";
+import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
 
 const {
   NEXTAUTH_SECRET,
@@ -24,14 +24,15 @@ const {
   ENABLE_CREDENTIALS,
 } = process.env;
 
+/** Build providers dynamically from env */
 const providers = [];
 
-// Email (Mailgun SMTP)
+// Email (SMTP or full connection string)
 if (EMAIL_SERVER || (EMAIL_SERVER_HOST && EMAIL_SERVER_USER && EMAIL_SERVER_PASSWORD)) {
   const port = Number(EMAIL_SERVER_PORT || 587);
   const secure = String(port) === "465";
   providers.push(
-    Email({
+    EmailProvider({
       server:
         EMAIL_SERVER ||
         {
@@ -41,7 +42,7 @@ if (EMAIL_SERVER || (EMAIL_SERVER_HOST && EMAIL_SERVER_USER && EMAIL_SERVER_PASS
           auth: { user: EMAIL_SERVER_USER, pass: EMAIL_SERVER_PASSWORD },
         },
       from: EMAIL_FROM,
-      maxAge: 10 * 60,
+      maxAge: 10 * 60, // 10 minutes for magic link
     })
   );
 }
@@ -49,24 +50,25 @@ if (EMAIL_SERVER || (EMAIL_SERVER_HOST && EMAIL_SERVER_USER && EMAIL_SERVER_PASS
 // Google (optional)
 if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
   providers.push(
-    Google({
+    GoogleProvider({
       clientId: GOOGLE_CLIENT_ID,
       clientSecret: GOOGLE_CLIENT_SECRET,
     })
   );
 }
 
-// Credentials (optional; disabled until you implement authorize)
+// Credentials (optional; disabled unless ENABLE_CREDENTIALS=true)
 if ((ENABLE_CREDENTIALS || "").toLowerCase() === "true") {
   providers.push(
-    Credentials({
+    CredentialsProvider({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize() {
-        return null; // deny until real validation is added
+      async authorize(/* credentials, req */) {
+        // TODO: implement real login; returning null denies access
+        return null;
       },
     })
   );
@@ -80,13 +82,15 @@ export default NextAuth({
         adapter: SupabaseAdapter({
           url: SUPABASE_URL,
           secret: SUPABASE_SERVICE_ROLE_KEY,
-          schema: "public", // <<— important fix
+          schema: "public",
         }),
       }
     : {}),
   providers,
   session: { strategy: "jwt" },
   secret: NEXTAUTH_SECRET,
-  pages: { signIn: "/auth/signin" },
+  pages: {
+    signIn: "/auth/signin", // <-- your custom styled page
+  },
   debug: process.env.NODE_ENV === "development",
 });
