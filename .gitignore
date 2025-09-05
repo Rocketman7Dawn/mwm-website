@@ -1,65 +1,12 @@
-# --------------------------------------------------
-# ✅ NODE & NEXT.JS DEPENDENCIES / BUILD OUTPUT
-# --------------------------------------------------
-
-node_modules/
-.next/
-out/
-dist/
-
-# --------------------------------------------------
-# ✅ ENVIRONMENT FILES (NEVER TRACK SECRETS)
-# --------------------------------------------------
-
+node_modules
+.next
+dist
+out
+.turbo
+.vercel
+*.log
 .env
-.env.*             # .env.local, .env.production, etc.
-!.env.example      # Keep example file for others
-
-# --------------------------------------------------
-# ✅ LOG FILES
-# --------------------------------------------------
-
-npm-debug.log*
-yarn-debug.log*
-pnpm-debug.log*
-
-# --------------------------------------------------
-# ✅ OS SYSTEM FILES
-# --------------------------------------------------
-
+.env.local
+.env.*.local
+.repl_history
 .DS_Store
-Thumbs.db
-
-# --------------------------------------------------
-# ✅ REPLIT-SPECIFIC FILES
-# --------------------------------------------------
-
-.replit
-*.replit
-.history/
-*.swp
-*.tmp
-
-# --------------------------------------------------
-# ✅ SUPABASE (OPTIONAL)
-# Comment out if you want to track these
-# --------------------------------------------------
-
-supabase/migrations/
-supabase/types/
-
-# --------------------------------------------------
-# ✅ IDE / EDITOR CONFIG
-# --------------------------------------------------
-
-.vscode/
-.idea/
-
-# --------------------------------------------------
-# ✅ MAC / TEMP FILES
-# --------------------------------------------------
-
-*.bak
-*.old
-*.orig
-*.tmp
