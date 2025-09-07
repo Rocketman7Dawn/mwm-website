@@ -3,720 +3,451 @@
 @tailwind components;
 @tailwind utilities;
 
-.navlink{
-  color:#fff !important;
-  text-decoration: underline;
-  text-underline-offset: 6px;
-  text-decoration-thickness: 3px;
-}
-.navlg{
-  font-size: 28px; /* big header links like your target */
-  font-weight: 700;
-}
-.navlink:hover{ opacity:.9; }
-
-
-/* optional smoothing */
+/* ---------- Base / resets ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; max-width: 100%; overflow-x: hidden; background: #000; }
 html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-
-/* Optional quality-of-life */
-html, body { height: 100%; }
-
-html, body, #__next, * {
-  font-family: var(--font-yeseva), "Yeseva One", serif !important;
-  font-weight: 400;
+:root{
+  --font-yeseva: "Yeseva One", serif;
+  --font-display: var(--font-yeseva, "Yeseva One", serif);
 }
+body, #__next { margin: 0; color: #fff; font-family: var(--font-display); font-weight: 400; }
+img { max-width: 100%; height: auto; }
 
-/* Your existing nav styles can stay; keep weight at 400 for crisp Yeseva */
+/* ---------- Full-viewport fixed background utility ---------- */
+.page-bg { position: fixed; inset: 0; z-index: -1; }
+.page-bg > img { width: 100%; height: 100%; object-fit: cover; }
+
+/* =========================================
+   HEADER / NAV (single row → hamburger)
+   ========================================= */
+
+/* links */
 .navlink{
   color:#fff !important;
   text-decoration: underline;
   text-underline-offset: 6px;
   text-decoration-thickness: 3px;
+  font-family: var(--font-display);
 }
-.navlg{ font-size: 28px; font-weight: 400; }  /* was 700; Yeseva looks bold at 400 */
 .navlink:hover{ opacity:.9; }
+.navlink.active{ text-decoration: none; } /* active page: no underline */
+.navlg{ font-size: clamp(18px, 1.8vw, 28px); font-weight: 400; }
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  background-color: #f0f4f8;
-  color: #333;
-  /* --- Home page responsive polish --- */
-  .home-grid{
-    display:grid;
-    grid-template-columns: minmax(240px,300px) 1fr 440px;
-    gap:28px;
-    align-items:center;
-  }
-  .logo-left{ display:flex; justify-content:flex-start; }
-  .headline-center{ text-align:center; }
-  .hero-right{ display:flex; justify-content:flex-end; }
-
-  /* Typographic tuning for Yeseva */
-  .h1-tight{ letter-spacing: -0.2px; }
-  .h2-tight{ letter-spacing: -0.15px; }
-
-  /* Tablet: relax sizes, center layout */
-  @media (max-width: 1024px){
-    .home-grid{
-      grid-template-columns: 1fr;
-      gap:24px;
-    }
-    .logo-left{ justify-content:center; }
-    .headline-center{ text-align:center; }
-    .hero-right{ justify-content:center; }
-  }
-
-  /* Phone: smaller logo/hero for balance */
-  @media (max-width: 640px){
-    .logo-img{ width:180px !important; height:180px !important; }
-    .hero-img{ width:320px !important; height:320px !important; }
+/* bar container */
+.navbar{
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  height: 64px;
+  padding: 0 clamp(12px, 2.5vw, 24px);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;          /* center the single row */
 }
-  /* ---------- Global sizing + typography for the Home hero ---------- */
-  :root{
-    --font-display: var(--font-yeseva, "Yeseva One", serif);
-  }
-
-  /* page width: fill most of the screen, but cap for readability */
-  .page-wrap{
-    width: min(95vw, 1440px);
-    margin: 0 auto;
-    padding: 96px 24px 40px;
-    color: #fff;
-    font-family: var(--font-display);
-  }
-
-  /* three-column hero: logo | headings | right image  */
-  .home-grid{
-    display: grid;
-    grid-template-columns:
-      minmax(200px, clamp(220px, 18vw, 300px))
-      1fr
-      clamp(320px, 26vw, 460px);
-    gap: 28px;
-    align-items: center;
-  }
-
-  /* left + right column alignment */
-  .logo-left{ display:flex; justify-content:flex-start; }
-  .hero-right{ display:flex; justify-content:flex-end; }
-
-  /* responsive image sizes (auto-step) */
-  .logo-img{
-    width: clamp(180px, 16vw, 260px);
-    height: clamp(180px, 16vw, 260px);
-    border-radius: 8px;
-    object-fit: cover;
-    box-shadow: 0 10px 30px rgba(0,0,0,.5);
-  }
-  .hero-img{
-    width: clamp(300px, 26vw, 420px);
-    height: clamp(300px, 26vw, 420px);
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
-    border-radius: 0;               /* square like your mock; change to 12px if you prefer */
-    border: 1px solid rgba(255,255,255,.18);
-    box-shadow: 0 26px 64px rgba(0,0,0,.6);
-  }
-
-  /* Yeseva headline tuning (matches mock) */
-  .h1-main{
-    margin: 0;
-    font-size: clamp(36px, 4.0vw, 58px);  /* ~58 on desktop */
-    font-weight: 400;
-    line-height: 1.10;
-    letter-spacing: 0.3px;
-    word-spacing: 1.6px;
-    text-shadow: 0 2px 2px rgba(0,0,0,.75);
-    text-align: center;
-  }
-  .h2-sub{
-    margin: 14px 0 0;
-    font-size: clamp(30px, 3.4vw, 50px);  /* two lines: “AI Automation for the / Conscious” */
-    font-weight: 400;
-    line-height: 1.18;
-    letter-spacing: 0.2px;
-    word-spacing: 1.2px;
-    text-shadow: 0 2px 2px rgba(0,0,0,.75);
-    text-align: center;
-  }
-
-  /* body copy */
-  .body-copy{
-    margin-top: 40px;
-    max-width: 1000px;
-  }
-  .body-copy p{
-    font-size: clamp(18px, 1.6vw, 22px);
-    font-weight: 400;
-    line-height: 1.6;
-    text-shadow: 0 1px 1px rgba(0,0,0,.65);
-    margin: 0 0 14px 0;
-  }
-
-  /* Tablet and below: stack columns nicely */
-  @media (max-width: 1024px){
-    .home-grid{
-      grid-template-columns: 1fr;
-      gap: 24px;
-    }
-    .logo-left{ justify-content: center; }
-    .hero-right{ justify-content: center; }
-    .body-copy{ max-width: 820px; margin-left:auto; margin-right:auto; }
-  }
-  /* -------- Services page layout (v4) -------- */
-  .services-wrap{
-    width: min(98vw, 1600px);
-    margin: 0 auto;
-    padding: 96px 24px 56px;
-    color: #fff;
-    font-family: var(--font-yeseva, "Yeseva One", serif);
-  }
-
-  /* two columns with enough height so the image can sit at the bottom-right */
-  .services-grid{
-    display: grid;
-    grid-template-columns: minmax(760px, 1fr) clamp(280px, 22vw, 360px);
-    gap: 36px;
-    align-items: start;
-    min-height: 62vh; /* gives vertical room for bottom alignment */
-  }
-
-  .services-title{
-    margin: 0 0 22px 0;
-    font-size: clamp(34px, 3.2vw, 56px);   /* same family sizing as other pages */
-    font-weight: 400;
-    line-height: 1.04;
-    letter-spacing: .2px;
-    text-shadow: 0 2px 2px rgba(0,0,0,.75);
-  }
-
-  /* bullets: more indent + slightly smaller text */
-  .services-list{
-    list-style: disc;
-    padding-left: 2.4em;                   /* ← deeper indent */
-    margin: 0;
-    max-width: 1100px;
-  }
-  .services-list li{
-    font-size: clamp(22px, 2.3vw, 40px);   /* ← a bit smaller than before */
-    font-weight: 400;
-    line-height: 1.34;
-    margin: 0 0 18px 0;
-    text-shadow: 0 1px 1px rgba(0,0,0,.65);
-  }
-  .services-list li::marker{ font-size: 1.25em; }
-
-  /* right column container to push image to bottom-right */
-  .services-right{
-    display: flex;
-    justify-content: flex-end;
-    align-items: flex-end;                 /* ← bottom */
-    padding-bottom: 8px;                   /* small breathing room from bottom */
-  }
-
-  .services-hero{
-    width: clamp(280px, 22vw, 360px);
-    height: clamp(280px, 22vw, 360px);
-    aspect-ratio: 1/1;
-    object-fit: cover;
-    border: 1px solid rgba(255,255,255,.18);
-    box-shadow: 0 24px 60px rgba(0,0,0,.6);
-    border-radius: 0;
-  }
-
-  /* Tablet & below: stack cleanly */
-  @media (max-width: 1024px){
-    .services-grid{ grid-template-columns: 1fr; gap: 28px; min-height: auto; }
-    .services-right{ justify-content: center; align-items: center; }
-  }
-
-  /* ===== Customization — stable layout ===== */
-
-  .custom-wrap{
-    width: min(98vw, 1600px);
-    margin: 0 auto;
-    padding: 140px 24px 64px;            /* plenty of space under fixed header */
-    font-family: var(--font-yeseva, "Yeseva One", serif);
-    color: #fff;
-  }
-
-  /* Two firm columns: a generous left lane + flexible right */
-  .custom-grid{
-    display: grid;
-    grid-template-columns: 620px 1fr;    /* ← wider left lane so title never fights */
-    gap: 48px;
-    align-items: start;
-  }
-
-  /* Title: always one line, smaller, never clipped */
-  .custom-title{
-    margin: 0;
-    max-width: 620px;
-    font-size: clamp(34px, 3.2vw, 56px); /* ↓ smaller to fit one line */
-    font-weight: 400;
-    line-height: 1.06;
-    letter-spacing: .2px;
-    text-shadow: 0 2px 2px rgba(0,0,0,.75);
-    white-space: nowrap;                 /* no wrap on desktop */
-    color: #fff !important;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* Glass card: sits lower, anchored right, white text guaranteed */
-  .custom-card{
-    justify-self: end;
-    width: min(100%, clamp(680px, 56vw, 1000px));
-    margin-top: 110px;                   /* ← push it down so it clears the title */
-    border-radius: 28px;
-    padding: 24px 36px;
-    background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-    border: 2px solid rgba(255,255,255,0.85);
-    box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset, 0 24px 60px rgba(0,0,0,.45);
-    overflow: hidden;
-    color: #fff !important;
-  }
-  .custom-card *{ color:#fff !important; }
-  .custom-card svg{ width:56px; height:56px; stroke:#fff; }
-
-  /* Feature rows */
-  .custom-feature{
-    display: grid;
-    grid-template-columns: 56px 1fr;
-    gap: 16px;
-    align-items: start;
-    padding: 14px 0;
-  }
-  .custom-h{
-    font-size: clamp(20px, 2.2vw, 34px);
-    font-weight: 400;
-    margin: 0 0 6px 0;
-  }
-  .custom-p{
-    font-size: clamp(16px, 1.4vw, 20px);
-    line-height: 1.55;
-    margin: 0;
-  }
-
-  /* Tablet & below: stack; allow title to wrap so it doesn't overflow */
-  @media (max-width: 1024px){
-    .custom-grid{ grid-template-columns: 1fr; gap: 28px; }
-    .custom-card{ justify-self: stretch; width: 100%; margin-top: 24px; }
-    .custom-title{ white-space: normal; }
-  }
-  /* Align "Customization" with the first icon in the card (desktop) */
-  @media (min-width: 1025px){
-    .custom-title{
-      /* card margin-top (110px) + card top padding (24px) = 134px */
-      margin-top: 134px;
-    }
-  }
-  /* ---------- About page ---------- */
-  .about-wrap{
-    width: min(98vw, 1600px);
-    margin: 0 auto;
-    padding: 120px 24px 72px;     /* clears the fixed header */
-    color: #fff;
-    font-family: var(--font-yeseva, "Yeseva One", serif);
-  }
-
-  .about-title{
-    margin: 0 0 28px 0;
-    font-size: clamp(36px, 6vw, 96px);
-    font-weight: 400;
-    line-height: 1.06;
-    text-shadow: 0 2px 2px rgba(0,0,0,.75);
-  }
-
-  .about-grid{
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 40px;
-    align-items: start;
-  }
-
-  .about-card{
-    background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
-    border: 2px solid rgba(255,255,255,0.8);
-    border-radius: 22px;
-    box-shadow: 0 28px 70px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.45) inset;
-    padding: 26px 28px 28px;
-    color: #fff !important;
-  }
-
-  .about-top{
-    display: grid;
-    grid-template-columns: clamp(110px, 10vw, 140px) 1fr;
-    gap: 20px;
-    align-items: center;
-    margin-bottom: 10px;
-  }
-
-  .about-photo{
-    width: clamp(110px, 10vw, 140px);
-    height: clamp(110px, 10vw, 140px);
-    object-fit: cover;
-    border-radius: 6px;
-    box-shadow: 0 8px 24px rgba(0,0,0,.35);
-    border: 1px solid rgba(255,255,255,.25);
-  }
-
-  .about-name{
-    font-size: clamp(22px, 2.6vw, 34px);
-    font-weight: 400;
-    margin: 0;
-  }
-
-  .about-text{
-    font-size: clamp(16px, 1.5vw, 19px);
-    line-height: 1.6;
-    margin: 8px 0 0 0;
-    color: rgba(255,255,255,0.95);
-  }
-
-  /* Stack on tablet/phone */
-  @media (max-width: 1024px){
-    .about-grid{ grid-template-columns: 1fr; }
-  }
-  /* Match About & Services title sizing to Customization */
-  .about-title,
-  .services-title{
-    font-size: clamp(34px, 3.2vw, 56px); /* same as .custom-title */
-    font-weight: 400;
-    line-height: 1.04;
-    letter-spacing: .2px;
-    text-shadow: 0 2px 2px rgba(0,0,0,.75);
-  }
-
-  /* Optional: keep single-word About on one line (desktop) */
-  @media (min-width: 1025px){
-    .about-title{ white-space: nowrap; }
-  }
-  /* ---------- Contact page ---------- */
-  .contact-wrap{
-    width: min(98vw, 1600px);
-    margin: 0 auto;
-    padding: 120px 24px 72px;   /* clears fixed header */
-    color: #fff;
-    font-family: var(--font-yeseva, "Yeseva One", serif);
-  }
-
-  /* Title size = same as About/Services/Customization */
-  .about-title,
-  .services-title,
-  .contact-title{
-    font-size: clamp(34px, 3.2vw, 56px);
-    font-weight: 400;
-    line-height: 1.04;
-    letter-spacing: .2px;
-    text-shadow: 0 2px 2px rgba(0,0,0,.75);
-    margin: 0 0 28px 0;
-    color: #fff;
-  }
-
-  .contact-grid{
-    display: grid;
-    grid-template-columns: minmax(360px, 560px) 1fr; /* left title lane + right info */
-    gap: 40px;
-    align-items: start;
-  }
-
-  .contact-info{
-    justify-self: end;          /* tuck the info to the right like your mock */
-    max-width: 520px;
-    color: #fff;
-  }
-
-  .contact-h{
-    font-size: clamp(20px, 2.2vw, 34px); /* matches card headings sizing */
-    font-weight: 400;
-    margin: 28px 0 10px 0;
-    color: #fff;
-  }
-
-  .contact-p{
-    font-size: clamp(16px, 1.5vw, 19px);  /* matches about body size */
-    line-height: 1.6;
-    margin: 0 0 8px 0;
-    color: #fff;
-  }
-
-  .contact-link{
-    color: #fff;
-    text-decoration: underline;
-    text-underline-offset: 4px;
-  }
-
-  .contact-social{
-    display: flex;
-    gap: 18px;
-    align-items: center;
-    margin-top: 8px;
-  }
-  .contact-social svg{
-    width: 38px; height: 38px;
-    stroke: #fff; fill: none;
-  }
-
-  /* Stack cleanly on tablets/phones */
-  @media (max-width: 1024px){
-    .contact-grid{ grid-template-columns: 1fr; }
-    .contact-info{ justify-self: start; }
-  }
-  /* Center the right column and prevent long lines from overflowing */
-  .contact-grid{
-    display: grid;
-    /* two centered columns */
-    grid-template-columns: minmax(420px, 560px) minmax(360px, 520px);
-    gap: 48px;
-    justify-content: center;   /* pulls both columns toward center */
-    align-items: start;
-  }
-
-  .contact-info{
-    justify-self: start;       /* no longer flush-right */
-    max-width: 520px;
-    text-align: left;
-    color: #fff;
-  }
-
-  /* make sure long addresses/links wrap nicely */
-  .contact-p,
-  .contact-link{
-    word-break: break-word;
-    overflow-wrap: anywhere;
-  }
-  /* ---- Services tune-up ---- */
-  .services-wrap{
-    /* lower the content so the H1 lines up with the nav */
-    padding: 120px 24px 56px;                 /* was 96px top */
-  }
-
-  .services-title{
-    margin: 0 0 22px 0;                        /* keep it tidy under the nav */
-    font-size: clamp(34px, 3.2vw, 56px);       /* same family sizing as other pages */
-  }
-
-  .services-list{
-    /* deeper indent for bullets + text */
-    margin-left: 18px;                          /* <— pushes whole list in */
-    padding-left: 2.6em;                         /* <— more space after the bullet */
-    max-width: 1100px;
-  }
-
-  .services-list li{
-    font-size: clamp(20px, 2.1vw, 36px);        /* slightly smaller than before */
-    line-height: 1.34;
-    margin: 0 0 16px 0;
-  }
-
-  /* keep image in the bottom-right corner of the content area */
-  .services-grid{
-    min-height: 78vh;                           /* adds vertical room so image can sit low */
-  }
-
-  .services-right{
-    display: flex;
-    justify-content: flex-end;
-    align-items: flex-end;                       /* bottom */
-    align-self: end;                             /* grid item hugs the bottom of the grid */
-  }
-
-  .services-hero{
-    margin-bottom: 12px;                         /* little breathing room from the edge */
-  }
-  /* ---- Client Login tweaks ---- */
-
-  /* move the card down and to the right */
-  .login-card{
-    margin-left: auto;                          /* pushes it to the right */
-    margin-top: clamp(60px, 10vh, 140px);       /* lowers it */
-  }
-
-  /* match sizes used across pages (About/Services body sizes) */
-  .login-label{
-    font-size: clamp(16px, 1.5vw, 19px);
-    font-weight: 400;
-    margin-bottom: 8px;
-    color: #fff;
-  }
-
-  .login-input{
-    font-size: clamp(16px, 1.5vw, 19px);
-  }
-
-  .login-btn{
-    font-size: clamp(16px, 1.5vw, 19px);
-  }
-
-  /* small divider style in white */
-  .login-or{
-    margin: 18px 0 10px;
-    font-size: clamp(14px, 1.2vw, 16px);
-    opacity: .9;
-    color: #fff;
-    text-align: center;
-  }
-
-  /* keep all provider buttons consistent */
-  .login-providers .login-btn{
-    font-size: clamp(16px, 1.5vw, 19px);
-  }
-  /* ---- Client Login: align under “Services” and lower on page ---- */
-  .login-wrap{
-    width: min(98vw, 1600px);
-    margin: 0 auto;
-    padding: 120px 24px 96px; /* space below header */
-    color: #fff;
-    font-family: var(--font-yeseva, "Yeseva One", serif);
-  }
-
-  /* offset grid: left spacer column ≈ after “Home”, content starts under “Services” */
-  .login-positioner{
-    display: grid;
-    grid-template-columns: clamp(140px, 14vw, 280px) 1fr;
-    gap: 24px;
-    align-items: start;
-  }
-
-  .login-title--grid{
-    grid-column: 2;               /* title aligns with the card */
-    margin: 0 0 16px 0;
-  }
-
-  /* card sits lower and aligns with the title (column 2) */
-  .login-card{
-    grid-column: 2;
-    margin-top: clamp(70px, 12vh, 150px);
-    margin-left: 0;               /* we align via the grid now */
-    max-width: 560px;
-  }
-
-  /* keep typography consistent with other pages */
-  .login-label{ font-size: clamp(16px, 1.5vw, 19px); }
-  .login-input{ font-size: clamp(16px, 1.5vw, 19px); }
-  .login-btn{   font-size: clamp(16px, 1.5vw, 19px); }
-  .login-or{
-    margin: 18px 0 10px;
-    font-size: clamp(14px, 1.2vw, 16px);
-    opacity: .9;
-    color: #fff;
-    text-align: center;
-  }
-
-  /* Stack nicely on tablets/phones */
-  @media (max-width: 1024px){
-    .login-positioner{ grid-template-columns: 1fr; }
-    .login-title--grid,
-    .login-card{ grid-column: 1; margin-top: 24px; }
-  }
-  /* ---- Client Login layout + spacing + alignment ---- */
-  .login-wrap{
-    width: min(98vw, 1600px);
-    margin: 0 auto;
-    padding: 120px 24px 96px;
-    color: #fff;
-    font-family: var(--font-yeseva, "Yeseva One", serif);
-  }
-
-  /* offset grid so content starts under “Services” in the nav */
-  .login-positioner{
-    display: grid;
-    grid-template-columns: clamp(140px, 14vw, 280px) 1fr;
-    gap: 24px;
-    align-items: start;
-  }
-
-  .login-title{
-    font-size: clamp(34px, 3.2vw, 56px);
-    font-weight: 400;
-    line-height: 1.04;
-    letter-spacing: .2px;
-    text-shadow: 0 2px 2px rgba(0,0,0,.75);
-    margin: 0;
-  }
-
-  .login-title--grid{ grid-column: 2; margin: 0 0 16px 0; }
-
-  /* glass card aligned with title, lower on page */
-  .login-card{
-    grid-column: 2;
-    margin-top: clamp(70px, 12vh, 150px);
-    max-width: 560px;
-    background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
-    border: 2px solid rgba(255,255,255,0.85);
-    border-radius: 22px;
-    box-shadow: 0 28px 70px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.45) inset;
-    padding: 28px;
-    color: #fff;
-  }
-
-  /* Email row: label + input + button with gaps */
-  .login-emailRow{
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
-  }
-
-  /* typography to match site */
-  .login-label{
-    display: inline-block;
-    margin-right: 6px;
-    font-size: clamp(16px, 1.5vw, 19px);
-  }
-
-  .login-input{
-    min-width: clamp(220px, 32vw, 360px);
-    font-size: clamp(16px, 1.5vw, 19px);
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,.5);
-    background: rgba(0,0,0,.25);
-    color: #fff;
-    padding: 12px 14px;
-    outline: none;
-  }
-  .login-input::placeholder{ color: rgba(255,255,255,.75); }
-
-  .login-btn{
-    white-space: nowrap;
-    font-size: clamp(16px, 1.5vw, 19px);
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,.7);
-    background: rgba(255,255,255,.12);
-    color: #fff;
-    padding: 12px 16px;
-    cursor: pointer;
-    transition: transform .04s ease, background .15s ease;
-  }
-  .login-btn:hover{ background: rgba(255,255,255,.18); }
-  .login-btn:active{ transform: translateY(1px); }
-
-  .login-or{
-    margin: 18px 0 10px;
-    font-size: clamp(14px, 1.2vw, 16px);
-    opacity: .9;
-    color: #fff;
-    text-align: center;
-  }
-
-  /* center provider buttons (e.g., Google) */
-  .login-providers{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-  }
-
-  /* mobile stacking */
-  @media (max-width: 1024px){
-    .login-positioner{ grid-template-columns: 1fr; }
-    .login-title--grid,
-    .login-card{ grid-column: 1; margin-top: 24px; }
-  }
 
+/* single horizontal row of links */
+.nav-list{
+  display: flex !important;         /* force row on desktop */
+  flex-direction: row !important;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(16px, 2.4vw, 40px);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  white-space: nowrap;
+}
+.nav-list li{ display: flex; }
+.nav-list a{ display: inline-block; }
+
+/* hamburger button (hidden on desktop) */
+.header-mobile-btn{
+  display: none;
+  width: 46px; height: 42px;
+  border: 1px solid rgba(255,255,255,.55);
+  border-radius: 12px;
+  background: rgba(255,255,255,.12);
+  padding: 8px 10px;
+  margin-left: 12px;
+}
+.header-mobile-btn span{
+  display:block; height:2px; background:#fff; margin:6px 0; border-radius:2px;
+}
+
+/* mobile panel (rendered when open) */
+.header-mobile-panel{ display: none; }
+
+/* desktop: hide hamburger/panel */
+@media (min-width: 1025px){
+  .header-mobile-btn{ display: none !important; }
+  .header-mobile-panel{ display: none !important; }
+}
+
+/* mobile: hide desktop row; show hamburger + slide panel */
+@media (max-width: 1024px){
+  .nav-list{ display: none !important; }
+  .header-mobile-btn{ display: inline-flex !important; align-items: center; justify-content: center; }
+
+  .header-mobile-panel{
+    display: block;
+    position: fixed;
+    top: 64px; left: 0; right: 0;
+    height: calc(100dvh - 64px);
+    overflow: auto;
+    background: linear-gradient(to bottom, rgba(0,0,0,.9), rgba(0,0,0,.7));
+    border-top: 1px solid rgba(255,255,255,.25);
+    animation: headerPanelIn .18s ease-out;
+  }
+  .header-mobile-panel ul{
+    list-style: none;
+    margin: 0; padding: 16px 20px 24px;
+    display: grid; gap: 14px;
+  }
+}
+@keyframes headerPanelIn{ from{opacity:0; transform:translateY(-8px)} to{opacity:1; transform:translateY(0)} }
+
+/* =========================================
+   SHARED WRAPPERS (space under fixed header)
+   ========================================= */
+.page-wrap,
+.services-wrap,
+.custom-wrap,
+.about-wrap,
+.contact-wrap,
+.login-wrap {
+  width: min(98vw, 1600px);
+  margin: 0 auto;
+  padding: 120px 24px 64px;
+  font-family: var(--font-display);
+  color: #fff;
+}
+@media (max-width: 1024px){
+  .page-wrap,
+  .services-wrap,
+  .custom-wrap,
+  .about-wrap,
+  .contact-wrap,
+  .login-wrap {
+    width: min(96vw, 1080px);
+    padding: 88px 16px 48px;
+  }
+}
+
+/* =========================================
+   HOME
+   ========================================= */
+.home-grid{
+  display: grid;
+  grid-template-columns:
+    minmax(200px, clamp(220px, 18vw, 300px))
+    1fr
+    clamp(320px, 26vw, 460px);
+  gap: 28px;
+  align-items: center;
+}
+.logo-left{ display:flex; justify-content:flex-start; }
+.hero-right{ display:flex; justify-content:flex-end; }
+
+.logo-img{
+  width: clamp(180px, 16vw, 260px);
+  height: clamp(180px, 16vw, 260px);
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 10px 30px rgba(0,0,0,.5);
+}
+.hero-img{
+  width: clamp(300px, 26vw, 420px);
+  height: clamp(300px, 26vw, 420px);
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border: 1px solid rgba(255,255,255,.18);
+  box-shadow: 0 26px 64px rgba(0,0,0,.6);
+  border-radius: 0;
+}
+.h1-main{
+  margin: 0;
+  font-size: clamp(36px, 4.0vw, 58px);
+  font-weight: 400;
+  line-height: 1.10;
+  letter-spacing: 0.3px;
+  word-spacing: 1.6px;
+  text-shadow: 0 2px 2px rgba(0,0,0,.75);
+  text-align: center;
+}
+.h2-sub{
+  margin: 14px 0 0;
+  font-size: clamp(30px, 3.4vw, 50px);
+  font-weight: 400;
+  line-height: 1.18;
+  letter-spacing: 0.2px;
+  word-spacing: 1.2px;
+  text-shadow: 0 2px 2px rgba(0,0,0,.75);
+  text-align: center;
+}
+.body-copy{ margin-top: 40px; max-width: 1000px; }
+.body-copy p{
+  font-size: clamp(18px, 1.6vw, 22px);
+  font-weight: 400;
+  line-height: 1.6;
+  text-shadow: 0 1px 1px rgba(0,0,0,.65);
+  margin: 0 0 14px 0;
+}
+
+@media (max-width: 1024px){
+  .home-grid{ grid-template-columns: 1fr; gap: 18px; text-align: center; }
+  .logo-left, .hero-right { justify-content: center; }
+  .logo-img{ width: clamp(120px, 26vw, 180px); height: clamp(120px, 26vw, 180px); }
+  .hero-img{ width: clamp(220px, 46vw, 320px); height: clamp(220px, 46vw, 320px); }
+  .h1-main{ font-size: clamp(28px, 7vw, 36px); }
+  .h2-sub{  font-size: clamp(24px, 6.5vw, 32px); margin-top: 8px; }
+  .body-copy{ max-width: 90ch; margin-inline: auto; }
+  .body-copy p{ font-size: clamp(16px, 4vw, 18px); }
+}
+
+/* =========================================
+   SERVICES
+   ========================================= */
+.services-title{
+  margin: 0 0 22px 0;
+  font-size: clamp(34px, 3.2vw, 56px);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: .2px;
+  text-shadow: 0 2px 2px rgba(0,0,0,.75);
+}
+.services-grid{
+  display: grid;
+  grid-template-columns: minmax(760px, 1fr) clamp(280px, 22vw, 360px);
+  gap: 36px;
+  align-items: start;
+  min-height: 62vh;
+}
+.services-list{
+  list-style: disc;
+  padding-left: 2.6em;
+  margin: 0 0 0 18px;
+  max-width: 1100px;
+}
+.services-list li{
+  font-size: clamp(20px, 2.1vw, 36px);
+  font-weight: 400;
+  line-height: 1.34;
+  margin: 0 0 16px 0;
+  text-shadow: 0 1px 1px rgba(0,0,0,.65);
+}
+.services-list li::marker{ font-size: 1.25em; }
+.services-right{ display: flex; justify-content: flex-end; align-items: flex-end; padding-bottom: 8px; }
+.services-hero{
+  width: clamp(280px, 22vw, 360px);
+  height: clamp(280px, 22vw, 360px);
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  border: 1px solid rgba(255,255,255,.18);
+  box-shadow: 0 24px 60px rgba(0,0,0,.6);
+  border-radius: 0;
+}
+
+@media (max-width: 1024px){
+  .services-grid{ grid-template-columns: 1fr; min-height: auto; gap: 22px; }
+  .services-title{ text-align: center; }
+  .services-list{ padding-left: 1.6em; margin-left: 8px; }
+  .services-list li{ font-size: clamp(18px, 4.5vw, 22px); margin-bottom: 12px; }
+  .services-right{ justify-content: center; align-items: center; }
+  .services-hero{ width: clamp(220px, 54vw, 300px); height: clamp(220px, 54vw, 300px); margin-bottom: 8px; }
+}
+
+/* =========================================
+   CUSTOMIZATION
+   ========================================= */
+.custom-title{
+  margin: 0;
+  font-size: clamp(34px, 3.2vw, 56px);
+  font-weight: 400;
+  line-height: 1.06;
+  letter-spacing: .2px;
+  text-shadow: 0 2px 2px rgba(0,0,0,.75);
+  white-space: nowrap;          /* desktop: stay one line */
+  color: #fff !important;
+}
+.custom-grid{
+  display: grid;
+  grid-template-columns: 620px 1fr;    /* wide left lane so H1 never fights */
+  gap: 48px; align-items: start;
+}
+.custom-card{
+  justify-self: end;
+  width: min(100%, clamp(680px, 56vw, 1000px));
+  margin-top: 110px;
+  border-radius: 28px;
+  padding: 24px 36px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 2px solid rgba(255,255,255,0.85);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset, 0 24px 60px rgba(0,0,0,.45);
+  color: #fff !important;
+  overflow: hidden;
+}
+.custom-card *{ color: #fff !important; }
+
+/* feature rows + icons */
+.custom-feature{
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 16px; align-items: start; padding: 14px 0;
+}
+.custom-card svg, .custom-icon{ width: 56px; height: 56px; stroke: #fff; }
+
+/* align “Customization” with first icon row on desktop */
+@media (min-width: 1025px){
+  .custom-title{ margin-top: calc(110px + 24px); } /* card margin-top + padding-top */
+}
+
+/* mobile stack + icon resizing */
+@media (max-width: 1024px){
+  .custom-grid{ grid-template-columns: 1fr; gap: 22px; }
+  .custom-title{ white-space: normal; text-align: center; font-size: clamp(28px, 7vw, 36px); margin-top: 0; }
+  .custom-card{ justify-self: stretch; width: 100%; margin-top: 12px; }
+
+  .custom-feature{ grid-template-columns: 42px 1fr; gap: 14px; }
+  .custom-card svg, .custom-icon{ width: 42px; height: 42px; }
+  .custom-h{ font-size: clamp(18px, 4.8vw, 22px); }
+  .custom-p{ font-size: clamp(15px, 4.2vw, 18px); }
+}
+
+/* =========================================
+   ABOUT
+   ========================================= */
+.about-title{
+  margin: 0 0 28px 0;
+  font-size: clamp(34px, 3.2vw, 56px);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: .2px;
+  text-shadow: 0 2px 2px rgba(0,0,0,.75);
+}
+.about-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+.about-card{
+  background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  border: 2px solid rgba(255,255,255,0.8);
+  border-radius: 22px;
+  box-shadow: 0 28px 70px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.45) inset;
+  padding: 26px 28px 28px;
+  color: #fff !important;
+}
+.about-top{
+  display: grid;
+  grid-template-columns: clamp(110px, 10vw, 140px) 1fr;
+  gap: 20px; align-items: center; margin-bottom: 10px;
+}
+.about-photo{
+  width: clamp(110px, 10vw, 140px);
+  height: clamp(110px, 10vw, 140px);
+  object-fit: cover; border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  border: 1px solid rgba(255,255,255,.25);
+}
+.about-name{ font-size: clamp(22px, 2.6vw, 34px); font-weight: 400; margin: 0; }
+.about-text{ font-size: clamp(16px, 1.5vw, 19px); line-height: 1.6; margin: 8px 0 0 0; color: rgba(255,255,255,0.95); }
+
+@media (max-width: 1024px){
+  .about-grid{ grid-template-columns: 1fr; gap: 20px; }
+  .about-title{ text-align: center; font-size: clamp(28px, 7vw, 36px); }
+  .about-card{ padding: 18px; }
+  .about-top{ grid-template-columns: 88px 1fr; gap: 14px; }
+  .about-photo{ width: 88px; height: 88px; }
+  .about-name{ font-size: clamp(18px, 5vw, 22px); }
+  .about-text{ font-size: clamp(15px, 4.2vw, 18px); }
+}
+
+/* =========================================
+   CONTACT
+   ========================================= */
+.contact-title{
+  margin: 0 0 28px 0;
+  font-size: clamp(34px, 3.2vw, 56px);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: .2px;
+  text-shadow: 0 2px 2px rgba(0,0,0,.75);
+}
+.contact-grid{
+  display: grid;
+  grid-template-columns: minmax(420px, 560px) minmax(360px, 520px);
+  gap: 48px; justify-content: center; align-items: start;
+}
+.contact-info{ justify-self: start; max-width: 520px; text-align: left; color: #fff; }
+.contact-h{
+  font-size: clamp(20px, 2.2vw, 34px);
+  font-weight: 400; margin: 28px 0 10px 0; color: #fff;
+}
+.contact-p{
+  font-size: clamp(16px, 1.5vw, 19px);
+  line-height: 1.6; margin: 0 0 8px 0; color: #fff;
+}
+.contact-link{ color: #fff; text-decoration: underline; text-underline-offset: 4px; }
+.contact-social{ display: flex; gap: 18px; align-items: center; margin-top: 8px; }
+.contact-social svg{ width: 38px; height: 38px; stroke: #fff; fill: none; }
+.contact-p, .contact-link{ word-break: break-word; overflow-wrap: anywhere; }
+
+@media (max-width: 1024px){
+  .contact-grid{ grid-template-columns: 1fr; gap: 20px; }
+  .contact-title{ text-align: center; font-size: clamp(28px, 7vw, 36px); }
+  .contact-info{ justify-self: center; text-align: left; width: min(92vw, 560px); }
+  .contact-h{ font-size: clamp(18px, 5vw, 22px); }
+  .contact-p{ font-size: clamp(15px, 4.2vw, 18px); }
+}
+
+/* =========================================
+   LOGIN
+   ========================================= */
+.login-title{
+  font-size: clamp(34px, 3.2vw, 56px);
+  font-weight: 400; line-height: 1.04; letter-spacing: .2px;
+  text-shadow: 0 2px 2px rgba(0,0,0,.75); margin: 0;
+}
+.login-positioner{
+  display: grid;
+  grid-template-columns: clamp(140px, 14vw, 280px) 1fr;
+  gap: 24px; align-items: start;
+}
+.login-title--grid{ grid-column: 2; margin: 0 0 16px 0; }
+.login-card{
+  grid-column: 2;
+  margin-top: clamp(70px, 12vh, 150px);
+  max-width: 560px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  border: 2px solid rgba(255,255,255,0.85);
+  border-radius: 22px;
+  box-shadow: 0 28px 70px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.45) inset;
+  padding: 28px; color: #fff;
+}
+.login-emailRow{ display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.login-label{ display: inline-block; margin-right: 6px; font-size: clamp(16px, 1.5vw, 19px); color: #fff; }
+.login-input{
+  min-width: clamp(220px, 32vw, 360px);
+  font-size: clamp(16px, 1.5vw, 19px);
+  border-radius: 12px; border: 1px solid rgba(255,255,255,.5);
+  background: rgba(0,0,0,.25); color: #fff;
+  padding: 12px 14px; outline: none;
+}
+.login-input::placeholder{ color: rgba(255,255,255,.75); }
+.login-btn{
+  white-space: nowrap; font-size: clamp(16px, 1.5vw, 19px);
+  border-radius: 12px; border: 1px solid rgba(255,255,255,.7);
+  background: rgba(255,255,255,.12); color: #fff;
+  padding: 12px 16px; cursor: pointer;
+  transition: transform .04s ease, background .15s ease;
+}
+.login-btn:hover{ background: rgba(255,255,255,.18); }
+.login-btn:active{ transform: translateY(1px); }
+.login-or{ margin: 18px 0 10px; font-size: clamp(14px, 1.2vw, 16px); opacity: .9; color: #fff; text-align: center; }
+.login-providers{ display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
+@media (max-width: 1024px){
+  .login-positioner{ grid-template-columns: 1fr; }
+  .login-title{ text-align: center; font-size: clamp(28px, 7vw, 36px); }
+  .login-title--grid, .login-card{ grid-column: 1; margin-top: 16px; }
+  .login-input{ min-width: min(100%, 360px); width: 100%; }
+  .login-providers{ align-items: center; }
 }

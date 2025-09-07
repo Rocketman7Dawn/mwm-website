@@ -1,75 +1,95 @@
 // components/Header.jsx
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+
+const items = [
+  { href: "/", label: "Home", key: "home" },
+  { href: "/services", label: "Services", key: "services" },
+  { href: "/customization", label: "Customization", key: "customization" },
+  { href: "/about", label: "About", key: "about" },
+  { href: "/contact", label: "Contact Us", key: "contact" },
+  { href: "/auth/signin", label: "Client Login", key: "login" },
+];
 
 export default function Header({ active = "" }) {
-  const baseLinkStyle = {
-    color: "#fff",
-    fontSize: 28,
-    fontWeight: 400,
-    fontFamily: 'var(--font-yeseva, "Yeseva One", serif)',
-    textUnderlineOffset: "6px",
-    textDecorationThickness: "3px",
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  // Lock page scroll when the mobile menu is open
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    if (open) document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  const isActive = (href, key) => {
+    if (active) return active === key;                  // optional prop
+    if (!pathname) return false;
+    return href === "/" ? pathname === "/" : pathname.startsWith(href);
   };
 
-  const linkStyle = (name) =>
-    name === active
-      ? { ...baseLinkStyle, textDecoration: "none" } // active page: no underline
-      : { ...baseLinkStyle, textDecoration: "underline" };
-
   return (
-    <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50 }}>
-      {/* lighter neutral-black glass bar */}
+    <header className="fixed inset-x-0 top-0 z-[2000] pointer-events-auto">
       <div
         style={{
           background:
-            "linear-gradient(to bottom, rgba(0,0,0,0.42), rgba(0,0,0,0.18))",
+            "linear-gradient(to bottom, rgba(0,0,0,0.65), rgba(0,0,0,0.35))",
           backdropFilter: "blur(6px)",
         }}
       >
-     
-          <nav
-            style={{
-              width: "min(98vw, 1600px)",   // was maxWidth: 1200
-              margin: "0 auto",
-              height: 64,
-              padding: "0 24px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-
-          {/* left links */}
-          <ul
-            style={{
-              display: "flex",
-              gap: 28,
-              listStyle: "none",
-              margin: 0,
-              padding: 0,
-            }}
-          >
-            <li><Link href="/" style={linkStyle("home")}>Home</Link></li>
-            <li><Link href="/services" style={linkStyle("services")}>Services</Link></li>
-            <li><Link href="/customization" style={linkStyle("customization")}>Customization</Link></li>
-            <li><Link href="/about" style={linkStyle("about")}>About</Link></li>
+        <nav aria-label="Main navigation" className="navbar">
+          {/* Desktop: single centered row */}
+          <ul className="nav-list">
+            {items.map(({ href, label, key }) => (
+              <li key={href}>
+                <Link
+                  href={href}
+                  className={`navlink navlg${isActive(href, key) ? " active" : ""}`}
+                >
+                  {label}
+                </Link>
+              </li>
+            ))}
           </ul>
 
-          {/* right links */}
-          <ul
-            style={{
-              display: "flex",
-              gap: 28,
-              listStyle: "none",
-              margin: 0,
-              padding: 0,
-            }}
+          {/* Mobile: hamburger (shown via CSS at ≤1024px) */}
+          <button
+            type="button"
+            aria-label="Open menu"
+            aria-expanded={open ? "true" : "false"}
+            className="header-mobile-btn"
+            onClick={() => setOpen((v) => !v)}
           >
-            <li><Link href="/contact" style={linkStyle("contact")}>Contact Us</Link></li>
-            <li><Link href="/auth/signin" style={linkStyle("client")}>Client Login</Link></li>
-          </ul>
+            <span />
+            <span />
+            <span />
+          </button>
         </nav>
       </div>
+
+      {/* Mobile slide-down panel */}
+      {open && (
+        <div className="header-mobile-panel">
+          <ul>
+            {items.map(({ href, label, key }) => (
+              <li key={`m-${href}`}>
+                <Link
+                  href={href}
+                  className={`navlink navlg${isActive(href, key) ? " active" : ""}`}
+                  onClick={() => setOpen(false)}
+                >
+                  {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </header>
   );
 }
