@@ -12,7 +12,7 @@ const nav = [
   { href: "/customization", label: "Customization" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact Us" },
-  { href: "/auth/signin", label: "Client Login" }, // ← updated path
+  { href: "/auth/signin", label: "Login" }, // ← renamed from "Client Login"
 ];
 
 export default function TopNav() {

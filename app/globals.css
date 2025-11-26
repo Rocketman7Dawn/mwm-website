@@ -227,7 +227,7 @@ img { max-width: 100%; height: auto; }
 .services-list{
   list-style: disc;
   padding-left: 2.6em;
-  margin: 0 0 0 18px;
+  margin: 0 0 2.25rem 18px; /* more space before links */
   max-width: 1100px;
 }
 .services-list li{
@@ -247,6 +247,54 @@ img { max-width: 100%; height: auto; }
   border: 1px solid rgba(255,255,255,.18);
   box-shadow: 0 24px 60px rgba(0,0,0,.6);
   border-radius: 0;
+}
+
+/* Shared heading style: "At a glance", section headings, and link headings */
+.services-subtitle,
+#by-offering > h2,
+#by-business-type > h2,
+.services-link-heading {
+  font-size: clamp(22px, 2.1vw, 28px);
+  font-weight: 400;
+  margin: 1.75rem 0 0.75rem;
+  text-shadow: 0 1px 1px rgba(0,0,0,.75);
+}
+
+/* Jump-link headings just below "At a glance" */
+.services-link-heading {
+  margin-top: 0.25rem;
+  margin-bottom: 0;
+}
+
+/* Body text under headings (slightly smaller than headings) */
+.services-intro,
+.services-body-text {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
+}
+
+/* Lists in the detailed sections */
+.services-body-list {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+/* Link styling for "Services by Offering / Business Type" */
+.services-link-heading a {
+  color: #ffffff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.services-link-heading a:hover {
+  text-decoration: none;
+}
+
+/* make sure jump targets aren't hidden behind header */
+#by-offering,
+#by-business-type {
+  scroll-margin-top: 140px;
 }
 
 @media (max-width: 1024px){
@@ -271,24 +319,58 @@ img { max-width: 100%; height: auto; }
   white-space: nowrap;          /* desktop: stay one line */
   color: #fff !important;
 }
-.custom-grid{
+/* feature rows + icons */
+.custom-feature{
   display: grid;
-  grid-template-columns: 620px 1fr;    /* wide left lane so H1 never fights */
-  gap: 48px; align-items: start;
+  grid-template-columns: 40px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 10px 0;          /* less vertical space between items */
 }
-.custom-card{
-  justify-self: end;
-  width: min(100%, clamp(680px, 56vw, 1000px));
-  margin-top: 110px;
-  border-radius: 28px;
-  padding: 24px 36px;
-  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-  border: 2px solid rgba(255,255,255,0.85);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset, 0 24px 60px rgba(0,0,0,.45);
-  color: #fff !important;
-  overflow: hidden;
+.custom-card svg, .custom-icon{
+  width: 40px;
+  height: 40px;
+  stroke: #fff;
 }
-.custom-card *{ color: #fff !important; }
+
+
+
+/* Customization nav under the intro */
+.custom-nav {
+  margin-top: 1.5rem;
+  font-size: 1.2rem;          /* larger, like Services links */
+}
+
+/* stacked links (one per line) */
+.custom-nav--stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.custom-nav a {
+  color: #ffffff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.custom-nav a:hover {
+  text-decoration: none;
+}
+
+/* spacing + scroll behavior for sections */
+.custom-section {
+  margin-top: 2.5rem;
+}
+
+#custom-why,
+#custom-process,
+#custom-what,
+#custom-solo-orgs,
+#custom-talk {
+  scroll-margin-top: 140px; /* keeps headers visible when jumped to */
+}
+
 
 /* feature rows + icons */
 .custom-feature{
@@ -299,8 +381,9 @@ img { max-width: 100%; height: auto; }
 .custom-card svg, .custom-icon{ width: 56px; height: 56px; stroke: #fff; }
 
 /* align “Customization” with first icon row on desktop */
-@media (min-width: 1025px){
-  .custom-title{ margin-top: calc(110px + 24px); } /* card margin-top + padding-top */
+  @media (min-width: 1025px){
+    /* keep the big title visually balanced with the lowered card */
+    .custom-title{ margin-top: 0px; }
 }
 
 /* mobile stack + icon resizing */
