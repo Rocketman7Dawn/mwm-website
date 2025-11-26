@@ -3,9 +3,9 @@ import SignInForm from "./SignInForm";
 
 const BG_SRC = "/Client%20Login.png"; // "Client Login.png" in /public
 
-// This is now a SERVER component that receives searchParams
+// SERVER component – receives searchParams from Next.js
 export default function SignInPage({ searchParams }) {
-  const callbackUrl = searchParams?.callbackUrl || "/";
+  const callbackUrl = searchParams?.callbackUrl ?? "/";
 
   return (
     <div
@@ -28,7 +28,7 @@ export default function SignInPage({ searchParams }) {
             <h1 className="login-title">Client Login</h1>
           </div>
 
-          {/* Client form gets callbackUrl as a prop */}
+          {/* Client-side form gets callbackUrl as a prop */}
           <SignInForm callbackUrl={callbackUrl} />
         </div>
       </main>
