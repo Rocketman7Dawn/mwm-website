@@ -4,8 +4,9 @@ import SignInForm from "./SignInForm";
 const BG_SRC = "/Client%20Login.png"; // "Client Login.png" in /public
 
 // SERVER component – receives searchParams from Next.js
-export default function SignInPage({ searchParams }) {
-  const callbackUrl = searchParams?.callbackUrl ?? "/";
+  export default async function SignInPage(props) {
+    const searchParams = await props.searchParams;
+    const callbackUrl = searchParams?.callbackUrl ?? "/post-login"; // we'll add /post-login next
 
   return (
     <div

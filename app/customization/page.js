@@ -1,210 +1,344 @@
-// app/customization/page.js
-import Header from "../../components/Header";
+// app/clients/[clientId]/page.js
 
-const BG_SRC = "/Customization.png";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../../../pages/api/auth/[...nextauth]";
+import { createClient } from "@supabase/supabase-js";
+import AuthenticatedLayout from "../../../components/AuthenticatedLayout";
 
-export default function CustomizationPage() {
+export default async function ClientDashboard(props) {
+  // Next 15: params/searchParams are async
+  const params = await props.params;
+  const searchParams = await props.searchParams;
+
+  const { clientId } = params; // slug, e.g. "mwp"
+  const zoomStatus = searchParams?.zoom || null;
+
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.email) {
+    redirect(`/auth/signin?callbackUrl=/clients/${clientId}`);
+  }
+
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+    return (
+      <main
+        style={{ maxWidth: 900, margin: "2rem auto", fontFamily: "system-ui" }}
+      >
+        <h1>Client Dashboard</h1>
+        <p>Server config error – Supabase URL or key missing.</p>
+      </main>
+    );
+  }
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+  let client = null;
+  let clientError = null;
+  let services = [];
+  let servicesError = null;
+  let zoomConnection = null;
+  let zoomConnectionError = null;
+
+  // 1) Load client by slug (e.g. "mwp")
+  try {
+    const { data, error } = await supabase
+      .from("clients")
+      .select("*")
+      .eq("slug", clientId)
+      .single();
+
+    if (error && error.code !== "PGRST116") {
+      console.error("Error fetching client:", error);
+      clientError = error.message;
+    } else {
+      client = data;
+    }
+  } catch (err) {
+    console.error("Unexpected error fetching client:", err);
+    clientError = "Unexpected error loading client.";
+  }
+
+  const clientUuid = client?.id; // uuid from DB
+
+  // 2) Load services for this client (uuid)
+  if (clientUuid) {
+    try {
+      const { data, error } = await supabase
+        .from("client_services_view")
+        .select("*")
+        .eq("client_id", clientUuid);
+
+      if (error && error.code !== "PGRST116") {
+        console.error("Error fetching client services:", error);
+        servicesError = error.message;
+      } else {
+        services = data || [];
+      }
+    } catch (err) {
+      console.error("Error fetching client services:", err);
+      servicesError = "Unexpected error loading services.";
+    }
+
+    // 3) Load Zoom connection (uuid)
+    try {
+      const { data, error } = await supabase
+        .from("zoom_connections")
+        .select("*")
+        .eq("client_id", clientUuid)
+        .single();
+
+      if (error && error.code !== "PGRST116") {
+        console.error("Error fetching zoom connection:", error);
+        zoomConnectionError = error.message;
+      } else {
+        zoomConnection = data;
+      }
+    } catch (err) {
+      console.error("Error fetching zoom connection:", err);
+      zoomConnectionError = "Unexpected error loading Zoom connection.";
+    }
+  }
+
+  const clientName = client?.name || "Client";
+
+  // --- STYLES ---
+  const cardStyle = {
+    maxWidth: "960px",
+    margin: "2.5rem auto",
+    padding: "1.75rem 2rem",
+    borderRadius: "18px",
+    background: "rgba(0, 0, 0, 0.65)",
+    color: "#f9fafb",
+    fontFamily: 'var(--font-yeseva, "Yeseva One", serif)',
+  };
+
+  const headerRowStyle = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "1.5rem",
+    marginBottom: "1.5rem",
+  };
+
+  const zoomCardStyle = {
+    borderRadius: "14px",
+    background: "rgba(15, 23, 42, 0.9)",
+    padding: "1.25rem 1.5rem",
+    marginBottom: "1.25rem",
+  };
+
+  const servicesCardStyle = {
+    borderRadius: "14px",
+    background: "rgba(15, 23, 42, 0.9)",
+    padding: "1.25rem 1.5rem",
+  };
+
+  const serviceRowStyle = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "0.5rem 1.25rem",
+    borderRadius: "999px",
+    background: "rgba(15, 23, 42, 0.9)",
+  };
+
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundImage: `url(${BG_SRC})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        fontFamily: 'var(--font-yeseva, "Yeseva One", serif)',
-      }}
-    >
-      <Header active="customization" />
+    <AuthenticatedLayout active="clients">
+      <main style={cardStyle}>
+        {/* Header */}
+        <header style={headerRowStyle}>
+          <div>
+            <h1 style={{ fontSize: "1.9rem", fontWeight: 600, margin: 0 }}>
+              Welcome {clientName}
+            </h1>
+            <p
+              style={{
+                marginTop: "0.5rem",
+                fontSize: "0.9rem",
+                color: "#cbd5f5",
+              }}
+            >
+              This is your Mindfulness with Mind client dashboard.
+            </p>
+            {zoomStatus === "success" && (
+              <p
+                style={{
+                  marginTop: "0.25rem",
+                  fontSize: "0.75rem",
+                  color: "#4ade80",
+                }}
+              >
+                Zoom connected successfully.
+              </p>
+            )}
+            {zoomStatus === "error" && (
+              <p
+                style={{
+                  marginTop: "0.25rem",
+                  fontSize: "0.75rem",
+                  color: "#f97373",
+                }}
+              >
+                There was an issue connecting Zoom. Please try again.
+              </p>
+            )}
+          </div>
 
-      <main className="custom-wrap">
-        {/* INTRO + JUMP LINKS */}
-        <section>
-          <h1 className="custom-title">Custom Solutions &amp; How We Work</h1>
+          {/* Log out – go to /auth/signout (no callbackUrl) */}
+          <a
+            href="/auth/signout"
+            style={{
+              borderRadius: "999px",
+              background: "rgba(255, 255, 255, 0.92)",
+              padding: "0.35rem 1.25rem",
+              fontSize: "0.85rem",
+              fontWeight: 500,
+              color: "#020617",
+              border: "none",
+              cursor: "pointer",
+              fontFamily:
+                'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+              textDecoration: "none",
+              flexShrink: 0,
+            }}
+          >
+            Log out
+          </a>
+        </header>
 
-          <p className="custom-p">
-            No two conscious businesses are the same. Your support shouldn&apos;t
-            be either.
+        {/* Error messages */}
+        {clientError && (
+          <p
+            style={{
+              marginBottom: "0.5rem",
+              fontSize: "0.8rem",
+              color: "#f97373",
+            }}
+          >
+            Error loading client info.
           </p>
-          <p className="custom-p">
-            Mindfulness With Mind doesn&apos;t drop a generic system on top of your
-            work. We co-design reflective support that matches the way you
-            teach, coach, hold space, and run your business.
+        )}
+        {zoomConnectionError && (
+          <p
+            style={{
+              marginBottom: "0.5rem",
+              fontSize: "0.8rem",
+              color: "#f97373",
+            }}
+          >
+            Error loading Zoom connection info.
           </p>
+        )}
+        {servicesError && (
+          <p
+            style={{
+              marginBottom: "0.5rem",
+              fontSize: "0.8rem",
+              color: "#f97373",
+            }}
+          >
+            Error loading services.
+          </p>
+        )}
 
-          {/* Links styled EXACTLY like Services page links */}
-          <h3 className="services-link-heading">
-            <a href="#custom-why">Why Customization Matters</a>
-          </h3>
-          <h3 className="services-link-heading">
-            <a href="#custom-process">Our Process</a>
-          </h3>
-          <h3 className="services-link-heading">
-            <a href="#custom-what">What We Customize</a>
-          </h3>
-          <h3 className="services-link-heading">
-            <a href="#custom-solo-orgs">Solo &amp; Organizations</a>
-          </h3>
-          <h3 className="services-link-heading">
-            <a href="#custom-talk">Talk About Your Practice</a>
-          </h3>
+        {/* Zoom card */}
+        <section style={zoomCardStyle}>
+          <h2 style={{ fontSize: "0.9rem", fontWeight: 600, margin: 0 }}>
+            Zoom connection
+          </h2>
+          {zoomConnection ? (
+            <p
+              style={{
+                marginTop: "0.4rem",
+                fontSize: "0.8rem",
+                color: "#e5e7eb",
+              }}
+            >
+              Zoom is connected for this client.
+            </p>
+          ) : (
+            <>
+              <p
+                style={{
+                  marginTop: "0.4rem",
+                  fontSize: "0.8rem",
+                  color: "#e5e7eb",
+                }}
+              >
+                Zoom is not yet connected for this client.
+              </p>
+              <a
+                href={`/api/zoom/connect?clientId=${clientId}`}
+                style={{
+                  display: "inline-flex",
+                  marginTop: "0.75rem",
+                  borderRadius: "999px",
+                  background: "#0ea5e9",
+                  padding: "0.4rem 1.25rem",
+                  fontSize: "0.8rem",
+                  fontWeight: 500,
+                  color: "#ffffff",
+                  textDecoration: "none",
+                  fontFamily:
+                    'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                }}
+              >
+                Connect Zoom
+              </a>
+            </>
+          )}
         </section>
 
-        {/* SECTIONS */}
-        <section id="custom-why" className="custom-section">
-          <h2 className="custom-h">Why Customization Matters</h2>
-          <p className="custom-p">
-            Your work is personal. The way you communicate, set boundaries, and
-            care for people is part of your medicine.
-          </p>
-          <p className="custom-p">
-            That&apos;s why we don&apos;t just plug in a generic template. We design
-            reflective support that honors the energetics of your work, not just
-            the logistics.
-          </p>
-
-          <h3 className="custom-h">What We Pay Attention To</h3>
-          <ul className="services-body-list">
-            <li>
-              Tone – your actual voice, not generic &quot;polite support.&quot;
-            </li>
-            <li>
-              Boundaries – what your systems never say, promise, or assume on
-              your behalf.
-            </li>
-            <li>
-              Nervous system load – what feels like support vs. what feels like
-              pressure.
-            </li>
-            <li>
-              Stage of business – what you actually need now, not &quot;someday
-              complexity.&quot;
-            </li>
-          </ul>
-
-          <h3 className="custom-h">The Intention Behind It</h3>
-          <ul className="services-body-list">
-            <li>Your values show up in every interaction.</li>
-            <li>
-              Your clients, students, and guests feel held and respected by how
-              your systems respond.
-            </li>
-            <li>
-              Your systems actually lighten your load instead of adding more
-              noise.
-            </li>
-          </ul>
-        </section>
-
-        <section id="custom-process" className="custom-section">
-          <h2 className="custom-h">Our Process</h2>
-          <p className="custom-p">
-            Customization doesn&apos;t have to be overwhelming. We move in clear,
-            gentle steps so you always know what&apos;s happening and why.
-          </p>
-
-          <h3 className="custom-h">1. Listen &amp; Map</h3>
-          <p className="custom-p">
-            We start with a conversation about your work, your people, and your
-            current systems. We map what&apos;s already working – and what&apos;s draining
-            you.
-          </p>
-
-          <h3 className="custom-h">2. Design a First Layer</h3>
-          <p className="custom-p">
-            We propose a simple, focused starting layer of support – often
-            around email, FAQs, or a specific program or retreat.
-          </p>
-
-          <h3 className="custom-h">3. Build &amp; Train</h3>
-          <p className="custom-p">
-            We train your AI support on your materials, your tone, and your
-            boundaries. You&apos;ll see (and can edit) examples of how it responds.
-          </p>
-
-          <h3 className="custom-h">4. Refine with Real Use</h3>
-          <p className="custom-p">
-            Once live, we look at real interactions to refine the system:
-            tightening responses, adding clarifications, and adjusting flows as
-            needed.
-          </p>
-
-          <h3 className="custom-h">5. Grow When You&apos;re Ready</h3>
-          <p className="custom-p">
-            From there, we can expand into additional services – live support,
-            transcriptions, or resource libraries – at a pace that feels right
-            for you and your team.
-          </p>
-        </section>
-
-        <section id="custom-what" className="custom-section">
-          <h2 className="custom-h">What We Customize</h2>
-          <p className="custom-p">
-            We don&apos;t just turn on tools. We shape how those tools behave in
-            your ecosystem – what they say, when they respond, and where they
-            hand things back to you.
-          </p>
-
-          <ul className="services-body-list">
-            <li>
-              <strong>Language &amp; Tone:</strong> wording, pacing, and energy
-              that feel like you.
-            </li>
-            <li>
-              <strong>Boundaries &amp; Policies:</strong> refunds, reschedules,
-              access, and expectations.
-            </li>
-            <li>
-              <strong>Flows &amp; Journeys:</strong> how someone moves from
-              first contact to working with you, and how they&apos;re supported
-              along the way.
-            </li>
-            <li>
-              <strong>Team Hand-offs:</strong> where AI steps back and a human
-              steps in.
-            </li>
-          </ul>
-        </section>
-
-        <section id="custom-solo-orgs" className="custom-section">
-          <h2 className="custom-h">Solo &amp; Organizations</h2>
-          <p className="custom-p">
-            We work with a range of conscious businesses: from solo
-            practitioners to training organizations and retreat centers.
-          </p>
-
-          <h3 className="custom-h">For Solo Practitioners</h3>
-          <p className="custom-p">
-            We keep things light and focused. One or two supportive workflows
-            that genuinely reduce your load – not a whole new job managing
-            systems.
-          </p>
-
-          <h3 className="custom-h">For Teams &amp; Schools</h3>
-          <p className="custom-p">
-            We design support that works across multiple people, roles, and
-            programs – with clear documentation so your team knows what the
-            system is doing on their behalf.
-          </p>
-        </section>
-
-        <section id="custom-talk" className="custom-section">
-          <h2 className="custom-h">Talk About Your Practice</h2>
-          <p className="custom-p">
-            If you&apos;re curious but unsure how this would look in your world, that&apos;s
-            a perfect place to start.
-          </p>
-          <p className="custom-p">
-            We can walk through your current reality – your inbox, your
-            programs, your retreats, your team – and explore where thoughtful
-            AI support could help you without diluting the heart of your work.
-          </p>
-          <p className="custom-p">
-            From there, we&apos;ll suggest a first layer of support and a gentle path
-            forward. No pressure, no hard sell – just clarity.
-          </p>
+        {/* Services card */}
+        <section style={servicesCardStyle}>
+          <h2 style={{ fontSize: "0.9rem", fontWeight: 600, margin: 0 }}>
+            Services
+          </h2>
+          {services.length === 0 ? (
+            <p
+              style={{
+                marginTop: "0.6rem",
+                fontSize: "0.8rem",
+                color: "#94a3b8",
+              }}
+            >
+              No services configured yet for this client.
+            </p>
+          ) : (
+            <ul
+              style={{
+                listStyle: "none",
+                padding: 0,
+                margin: "0.75rem 0 0 0",
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.5rem",
+              }}
+            >
+              {services.map((svc) => (
+                <li key={svc.id} style={serviceRowStyle}>
+                  <span>{svc.service_name}</span>
+                  <span
+                    style={{
+                      color: "#cbd5f5",
+                      fontSize: "0.8rem",
+                      fontFamily:
+                        'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                    }}
+                  >
+                    {svc.status}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       </main>
-    </div>
+    </AuthenticatedLayout>
   );
 }

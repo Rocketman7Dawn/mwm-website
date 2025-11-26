@@ -1,6 +1,16 @@
 // app/services/page.js
 import Header from "../../components/Header";
 
+import EmailSupportStudioFAQSnippet from "@/components/EmailSupportStudioFAQSnippet";
+
+// ...inside your Email Support Studio section:
+
+<section id="email-support-studio" className="...">
+  {/* Existing content about the offering */}
+  {/* ... */}
+
+  <EmailSupportStudioFAQSnippet />
+</section>
 const BG_SRC = "/Customization.png"; // background for Services page
 
 export default function ServicesPage() {
@@ -91,7 +101,7 @@ export default function ServicesPage() {
 
           <h3>Client Support &amp; FAQ Assistant</h3>
           <p className="services-body-text">
-            A gentle support assistant trained on your FAQs, welcome emails,
+            A thoughtful support assistant trained on your FAQs, welcome emails,
             retreat guides, and program pages to answer common questions.
           </p>
           <ul className="services-body-list">
@@ -112,7 +122,7 @@ export default function ServicesPage() {
             <li>Highlights key themes, practices, and follow-ups.</li>
             <li>Supports continuity across sessions and programs.</li>
             <li>
-              Can generate gentle summaries you share with clients (or keep
+              Can generate thoughtful summaries you share with clients (or keep
               private).
             </li>
           </ul>
@@ -149,7 +159,7 @@ export default function ServicesPage() {
 
           <h3>MWM Studio: Client Resource Library &amp; Portal (In Development)</h3>
           <p className="services-body-text">
-            A calm, central home for your key materials – FAQs, policies,
+            An organized, central home for your key materials – FAQs, policies,
             schedules, and program information.
           </p>
           <ul className="services-body-list">
@@ -176,7 +186,7 @@ export default function ServicesPage() {
           </p>
           <ul className="services-body-list">
             <li>
-              <strong>Calm Inbox Starter</strong> – Email Support Studio plus a
+              <strong>MWM Inbox Starter</strong> – Email Support Studio plus a
               simple FAQ assistant for your main offers.
             </li>
             <li>

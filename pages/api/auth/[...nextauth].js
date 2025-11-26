@@ -165,7 +165,7 @@ export const authOptions = {
             .from("client_users")
             .select("is_admin, is_mwm_admin, client_id")
             .eq("email", email)
-            .maybeSingle();
+            .single();
 
           if (error) {
             console.error("Error loading client_users role info:", error);

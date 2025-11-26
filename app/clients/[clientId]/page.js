@@ -1,12 +1,17 @@
 // app/clients/[clientId]/page.js
+
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { authOptions } from "../../../pages/api/auth/[...nextauth]";
 import { createClient } from "@supabase/supabase-js";
-import LogoutButton from "@/components/LogoutButton";
+import AuthenticatedLayout from "../../../components/AuthenticatedLayout";
 
-export default async function ClientDashboard({ params, searchParams }) {
-  const { clientId } = params || {}; // UUID of the client
+export default async function ClientDashboard(props) {
+  // Next 15: params/searchParams are async
+  const params = await props.params;
+  const searchParams = await props.searchParams;
+
+  const { clientId } = params; // slug, e.g. "mwp"
   const zoomStatus = searchParams?.zoom || null;
 
   const session = await getServerSession(authOptions);
@@ -21,7 +26,9 @@ export default async function ClientDashboard({ params, searchParams }) {
   if (!supabaseUrl || !serviceRoleKey) {
     console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
     return (
-      <main style={{ maxWidth: 900, margin: "2rem auto", fontFamily: "system-ui" }}>
+      <main
+        style={{ maxWidth: 900, margin: "2rem auto", fontFamily: "system-ui" }}
+      >
         <h1>Client Dashboard</h1>
         <p>Server config error – Supabase URL or key missing.</p>
       </main>
@@ -37,197 +44,301 @@ export default async function ClientDashboard({ params, searchParams }) {
   let zoomConnection = null;
   let zoomConnectionError = null;
 
-  // Fetch client record (to get client name)
+  // 1) Load client by slug (e.g. "mwp")
   try {
     const { data, error } = await supabase
       .from("clients")
-      .select("id, name")
-      .eq("id", clientId)
-      .maybeSingle();
+      .select("*")
+      .eq("slug", clientId)
+      .single();
 
     if (error && error.code !== "PGRST116") {
       console.error("Error fetching client:", error);
       clientError = error.message;
     } else {
-      client = data || null;
+      client = data;
     }
   } catch (err) {
     console.error("Unexpected error fetching client:", err);
     clientError = "Unexpected error loading client.";
   }
 
-  // Fetch services for this client from the new view
-  try {
-    const { data, error } = await supabase
-      .from("client_services_view")
-      .select("id, service_name, service_key, status")
-      .eq("client_id", clientId);
+  const clientUuid = client?.id; // uuid from DB
 
-    if (error) {
-      console.error("Error fetching client services:", error);
-      servicesError = error.message;
-    } else {
-      services = data || [];
+  // 2) Load services for this client (uuid)
+  if (clientUuid) {
+    try {
+      const { data, error } = await supabase
+        .from("client_services_view")
+        .select("*")
+        .eq("client_id", clientUuid);
+
+      if (error && error.code !== "PGRST116") {
+        console.error("Error fetching client services:", error);
+        servicesError = error.message;
+      } else {
+        services = data || [];
+      }
+    } catch (err) {
+      console.error("Error fetching client services:", err);
+      servicesError = "Unexpected error loading services.";
     }
-  } catch (err) {
-    console.error("Unexpected error fetching client services:", err);
-    servicesError = "Unexpected error loading services.";
+
+    // 3) Load Zoom connection (uuid)
+    try {
+      const { data, error } = await supabase
+        .from("zoom_connections")
+        .select("*")
+        .eq("client_id", clientUuid)
+        .single();
+
+      if (error && error.code !== "PGRST116") {
+        console.error("Error fetching zoom connection:", error);
+        zoomConnectionError = error.message;
+      } else {
+        zoomConnection = data;
+      }
+    } catch (err) {
+      console.error("Error fetching zoom connection:", err);
+      zoomConnectionError = "Unexpected error loading Zoom connection.";
+    }
   }
 
-  // Fetch zoom connection for this client
-  try {
-    const { data, error } = await supabase
-      .from("zoom_connections")
-      .select("id, token_expires_at")
-      .eq("client_id", clientId)
-      .maybeSingle();
+  const clientName = client?.name || "Client";
 
-    if (error && error.code !== "PGRST116") {
-      console.error("Error fetching zoom connection:", error);
-      zoomConnectionError = error.message;
-    } else {
-      zoomConnection = data || null;
-    }
-  } catch (err) {
-    console.error("Unexpected error fetching zoom connection:", err);
-    zoomConnectionError = "Unexpected error loading zoom connection.";
-  }
+  // --- STYLES ---
+  const cardStyle = {
+    maxWidth: "960px",
+    margin: "2.5rem auto",
+    padding: "1.75rem 2rem",
+    borderRadius: "18px",
+    background: "rgba(0, 0, 0, 0.65)",
+    color: "#f9fafb",
+    fontFamily: 'var(--font-yeseva, "Yeseva One", serif)',
+  };
 
-  const isZoomConnected = !!zoomConnection;
-  const clientName = client?.name || clientId; // fallback to UUID if name missing
+  const headerRowStyle = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "1.5rem",
+    marginBottom: "1.5rem",
+  };
+
+  const zoomCardStyle = {
+    borderRadius: "14px",
+    background: "rgba(15, 23, 42, 0.9)",
+    padding: "1.25rem 1.5rem",
+    marginBottom: "1.25rem",
+  };
+
+  const servicesCardStyle = {
+    borderRadius: "14px",
+    background: "rgba(15, 23, 42, 0.9)",
+    padding: "1.25rem 1.5rem",
+  };
+
+  const serviceRowStyle = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "0.5rem 1.25rem",
+    borderRadius: "999px",
+    background: "rgba(15, 23, 42, 0.9)",
+  };
 
   return (
-    <main
-      style={{
-        maxWidth: 900,
-        margin: "2rem auto",
-        fontFamily: "system-ui",
-        color: "#ffffff",
-      }}
-    >
-      {/* Header with client name, user, and logout */}
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "baseline",
-          marginBottom: "0.75rem",
-        }}
-      >
-        <div>
-          <h1 style={{ marginBottom: "0.25rem" }}>
-            Services for Client {clientName}
-          </h1>
-          {clientError && (
-            <p style={{ color: "#ff8a80", marginBottom: "0.25rem" }}>
-              Error loading client info.
+    <AuthenticatedLayout active="clients">
+      <main style={cardStyle}>
+        {/* Header */}
+        <header style={headerRowStyle}>
+          <div>
+            <h1 style={{ fontSize: "1.9rem", fontWeight: 600, margin: 0 }}>
+              Welcome {clientName}
+            </h1>
+            <p
+              style={{
+                marginTop: "0.5rem",
+                fontSize: "0.9rem",
+                color: "#cbd5f5",
+              }}
+            >
+              This is your Mindfulness with Mind client dashboard.
             </p>
-          )}
-          <p style={{ opacity: 0.8 }}>
-            Signed in as <strong>{session.user.email}</strong>
-          </p>
-        </div>
+            {zoomStatus === "success" && (
+              <p
+                style={{
+                  marginTop: "0.25rem",
+                  fontSize: "0.75rem",
+                  color: "#4ade80",
+                }}
+              >
+                Zoom connected successfully.
+              </p>
+            )}
+            {zoomStatus === "error" && (
+              <p
+                style={{
+                  marginTop: "0.25rem",
+                  fontSize: "0.75rem",
+                  color: "#f97373",
+                }}
+              >
+                There was an issue connecting Zoom. Please try again.
+              </p>
+            )}
+          </div>
 
-        <LogoutButton />
-      </header>
-
-      {/* Zoom status message from callback */}
-      {zoomStatus === "connected" && (
-        <div
-          style={{
-            padding: "0.75rem 1rem",
-            marginBottom: "0.75rem",
-            borderRadius: 6,
-            background: "#d4f8d0",
-            border: "1px solid #2e7d32",
-            fontSize: "0.9rem",
-            color: "#1b5e20",
-            fontWeight: 600,
-          }}
-        >
-          Zoom is connected for this client ✅
-        </div>
-      )}
-
-      {zoomStatus && zoomStatus !== "connected" && (
-        <div
-          style={{
-            padding: "0.75rem 1rem",
-            marginBottom: "0.75rem",
-            borderRadius: 6,
-            background: "#ffe0e0",
-            border: "1px solid #f44336",
-            fontSize: "0.9rem",
-            color: "#b71c1c",
-            fontWeight: 600,
-          }}
-        >
-          Zoom connection status: <strong>{zoomStatus}</strong>
-        </div>
-      )}
-
-      {/* Zoom connection banner / button */}
-      {isZoomConnected ? (
-        <div
-          style={{
-            padding: "0.75rem 1rem",
-            marginBottom: "1.25rem",
-            borderRadius: 6,
-            background: "#d4f8d0",
-            border: "1px solid #2e7d32",
-            fontSize: "0.9rem",
-            color: "#1b5e20",
-            fontWeight: 600,
-          }}
-        >
-          Zoom is connected for this client ✅
-        </div>
-      ) : (
-        <div style={{ marginBottom: "1.25rem" }}>
-          <p style={{ marginBottom: "0.5rem" }}>
-            Zoom is not yet connected for this client.
-          </p>
+          {/* Log out – now just goes to /auth/signout, no client-specific callbackUrl */}
           <a
-            href={`/api/zoom/oauth/start?clientId=${clientId}`}
+            href="/auth/signout"
             style={{
-              display: "inline-block",
-              padding: "0.5rem 1rem",
-              borderRadius: 999,
-              border: "1px solid #4fc3f7",
-              background: "#29b6f6",
-              color: "#000000",
+              borderRadius: "999px",
+              background: "rgba(255, 255, 255, 0.92)",
+              padding: "0.35rem 1.25rem",
+              fontSize: "0.85rem",
+              fontWeight: 500,
+              color: "#020617",
+              border: "none",
+              cursor: "pointer",
+              fontFamily:
+                'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
               textDecoration: "none",
-              fontSize: "0.9rem",
-              fontWeight: 600,
+              flexShrink: 0,
             }}
           >
-            Connect Zoom
+            Log out
           </a>
-        </div>
-      )}
+        </header>
 
-      {zoomConnectionError && (
-        <p style={{ color: "#ff8a80", marginBottom: "1rem" }}>
-          Error loading Zoom connection info.
-        </p>
-      )}
+        {/* Error messages */}
+        {clientError && (
+          <p
+            style={{
+              marginBottom: "0.5rem",
+              fontSize: "0.8rem",
+              color: "#f97373",
+            }}
+          >
+            Error loading client info.
+          </p>
+        )}
+        {zoomConnectionError && (
+          <p
+            style={{
+              marginBottom: "0.5rem",
+              fontSize: "0.8rem",
+              color: "#f97373",
+            }}
+          >
+            Error loading Zoom connection info.
+          </p>
+        )}
+        {servicesError && (
+          <p
+            style={{
+              marginBottom: "0.5rem",
+              fontSize: "0.8rem",
+              color: "#f97373",
+            }}
+          >
+            Error loading services.
+          </p>
+        )}
 
-      {/* Services section */}
-      {servicesError ? (
-        <p style={{ color: "#ff8a80" }}>Error loading services.</p>
-      ) : !services || services.length === 0 ? (
-        <p>No services found for this client.</p>
-      ) : (
-        <ul>
-          {services.map((service) => (
-            <li key={service.id} style={{ marginBottom: 8 }}>
-              <strong>{service.service_name || "Service"}</strong>
-              <br />
-              Status: {service.status || "unknown"}
-            </li>
-          ))}
-        </ul>
-      )}
-    </main>
+        {/* Zoom card */}
+        <section style={zoomCardStyle}>
+          <h2 style={{ fontSize: "0.9rem", fontWeight: 600, margin: 0 }}>
+            Zoom connection
+          </h2>
+          {zoomConnection ? (
+            <p
+              style={{
+                marginTop: "0.4rem",
+                fontSize: "0.8rem",
+                color: "#e5e7eb",
+              }}
+            >
+              Zoom is connected for this client.
+            </p>
+          ) : (
+            <>
+              <p
+                style={{
+                  marginTop: "0.4rem",
+                  fontSize: "0.8rem",
+                  color: "#e5e7eb",
+                }}
+              >
+                Zoom is not yet connected for this client.
+              </p>
+              <a
+                href={`/api/zoom/connect?clientId=${clientId}`}
+                style={{
+                  display: "inline-flex",
+                  marginTop: "0.75rem",
+                  borderRadius: "999px",
+                  background: "#0ea5e9",
+                  padding: "0.4rem 1.25rem",
+                  fontSize: "0.8rem",
+                  fontWeight: 500,
+                  color: "#ffffff",
+                  textDecoration: "none",
+                  fontFamily:
+                    'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                }}
+              >
+                Connect Zoom
+              </a>
+            </>
+          )}
+        </section>
+
+        {/* Services card */}
+        <section style={servicesCardStyle}>
+          <h2 style={{ fontSize: "0.9rem", fontWeight: 600, margin: 0 }}>
+            Services
+          </h2>
+          {services.length === 0 ? (
+            <p
+              style={{
+                marginTop: "0.6rem",
+                fontSize: "0.8rem",
+                color: "#94a3b8",
+              }}
+            >
+              No services configured yet for this client.
+            </p>
+          ) : (
+            <ul
+              style={{
+                listStyle: "none",
+                padding: 0,
+                margin: "0.75rem 0 0 0",
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.5rem",
+              }}
+            >
+              {services.map((svc) => (
+                <li key={svc.id} style={serviceRowStyle}>
+                  <span>{svc.service_name}</span>
+                  <span
+                    style={{
+                      color: "#cbd5f5",
+                      fontSize: "0.8rem",
+                      fontFamily:
+                        'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                    }}
+                  >
+                    {svc.status}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </main>
+    </AuthenticatedLayout>
   );
 }
