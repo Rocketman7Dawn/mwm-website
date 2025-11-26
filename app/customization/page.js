@@ -2,9 +2,9 @@
 
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../pages/api/auth/[...nextauth]";
+import { authOptions } from "../../pages/api/auth/[...nextauth]";
 import { createClient } from "@supabase/supabase-js";
-import AuthenticatedLayout from "../../../components/AuthenticatedLayout";
+import AuthenticatedLayout from "../../components/AuthenticatedLayout";
 
 export default async function ClientDashboard(props) {
   // Next 15: params/searchParams are async
