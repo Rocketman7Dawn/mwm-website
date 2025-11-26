@@ -1,159 +1,179 @@
-// app/admin/page.jsx
-"use client";
+// app/admin/page.js
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { authOptions } from "../../pages/api/auth/[...nextauth]";
 
-import { SessionProvider, useSession } from "next-auth/react";
-import { useEffect, useMemo, useState } from "react";
+export default async function AdminPage() {
+  const session = await getServerSession(authOptions);
 
-export default function AdminPage() {
-  // Wrap this page with SessionProvider so useSession works even if your app/layout doesn't include it.
-  return (
-    <SessionProvider>
-      <AdminInner />
-    </SessionProvider>
-  );
-}
-
-function AdminInner() {
-  const { data: session } = useSession();
-
-  // --- Mailgun Send Test ---
-  const [to, setTo] = useState("");
-  const [subject, setSubject] = useState("Mailgun test from Admin");
-  const [text, setText] = useState("Hello from MWM Admin!");
-  const [sending, setSending] = useState(false);
-  const [sendResult, setSendResult] = useState(null);
-
-  // --- Mailgun Events ---
-  const [recipient, setRecipient] = useState("");
-  const [event, setEvent] = useState("delivered"); // '', delivered, failed, accepted, opened, clicked
-  const [eventsLoading, setEventsLoading] = useState(false);
-  const [eventsData, setEventsData] = useState(null);
-
-  // Prefill with signed-in email
-  useEffect(() => {
-    if (session?.user?.email) {
-      setTo((v) => v || session.user.email);
-      setRecipient((v) => v || session.user.email);
-    }
-  }, [session?.user?.email]);
-
-  const webhookUrl = useMemo(() => {
-    if (typeof window === "undefined") return "/api/zoom/webhook";
-    return `${window.location.origin.replace(/\/$/, "")}/api/zoom/webhook`;
-  }, []);
-
-  async function sendTestEmail(e) {
-    e.preventDefault();
-    setSending(true);
-    setSendResult(null);
-    try {
-      const r = await fetch("/api/mailgun/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to, subject, text }),
-      });
-      const out = await r.text();
-      setSendResult({ ok: r.ok, status: r.status, body: out });
-    } catch (err) {
-      setSendResult({ ok: false, status: 0, body: String(err) });
-    } finally {
-      setSending(false);
-    }
+  // Only allow logged-in MWM Admins
+  if (!session || !session.user?.isMwmAdmin) {
+    redirect("/auth/signin");
   }
 
-  async function loadEvents() {
-    setEventsLoading(true);
-    setEventsData(null);
-    try {
-      const qs = new URLSearchParams();
-      if (recipient) qs.set("recipient", recipient);
-      if (event) qs.set("event", event);
-      const r = await fetch(`/api/mailgun/events?${qs.toString()}`, { cache: "no-store" });
-      const text = await r.text();
-      setEventsData({ ok: r.ok, status: r.status, body: tryParse(text) });
-    } catch (err) {
-      setEventsData({ ok: false, status: 0, body: String(err) });
-    } finally {
-      setEventsLoading(false);
-    }
-  }
-
-  const jsonLink = `/api/mailgun/events?${new URLSearchParams({
-    recipient: recipient || "",
-    event: event || "",
-  }).toString()}`;
-
   return (
-    <main style={{ maxWidth: 900, margin: "2rem auto", fontFamily: "system-ui" }}>
-      <h1>Admin</h1>
+    <main className="min-h-screen px-6 py-10 max-w-5xl mx-auto space-y-10">
+      <header className="space-y-2">
+        <h1 className="text-3xl font-semibold">MWM Admin Dashboard</h1>
+        <p className="text-sm text-gray-500">
+          Internal console for clients, AI tools, Mailgun, and Zoom integration.
+        </p>
+      </header>
 
-      <section style={card}>
-        <h2>Clients</h2>
-        <p><a href="/clients">Open MWP</a></p>
-      </section>
-
-      <section style={card}>
-        <h2>Mailgun</h2>
-
-        <h3>Send test email</h3>
-        <form onSubmit={sendTestEmail} style={{ display: "grid", gap: 8, maxWidth: 520 }}>
-          <label>
-            To
-            <input value={to} onChange={(e) => setTo(e.target.value)} type="email" required style={input} />
-          </label>
-          <label>
-            Subject
-            <input value={subject} onChange={(e) => setSubject(e.target.value)} style={input} />
-          </label>
-          <label>
-            Text
-            <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} style={input} />
-          </label>
-          <button disabled={sending} style={button}>
-            {sending ? "Sending…" : "Send"}
-          </button>
-        </form>
-        {sendResult && <pre style={pre}>{JSON.stringify(sendResult, null, 2)}</pre>}
-
-        <h3 style={{ marginTop: 24 }}>Recent Events</h3>
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <input
-            placeholder="recipient"
-            value={recipient}
-            onChange={(e) => setRecipient(e.target.value)}
-            style={input}
-          />
-          <select value={event} onChange={(e) => setEvent(e.target.value)} style={input}>
-            <option value="">any event</option>
-            <option value="delivered">delivered</option>
-            <option value="accepted">accepted</option>
-            <option value="failed">failed</option>
-            <option value="opened">opened</option>
-            <option value="clicked">clicked</option>
-          </select>
-          <button onClick={loadEvents} disabled={eventsLoading} style={button}>
-            {eventsLoading ? "Loading…" : "Load"}
-          </button>
-          <a href={jsonLink}>Open as JSON</a>
+      {/* Clients Section */}
+      <section className="border rounded-lg p-6 space-y-4">
+        <h2 className="text-xl font-semibold">Clients</h2>
+        <p className="text-sm text-gray-500">
+          Quick links into client admin dashboards.
+        </p>
+        <div className="space-y-2">
+          <div>
+            <a
+              href="/clients"
+              className="text-blue-600 underline hover:no-underline"
+            >
+              All Clients (future list)
+            </a>
+          </div>
+          <div>
+            <a
+              href="/clients/mwp"
+              className="text-blue-600 underline hover:no-underline"
+            >
+              Mayan Wisdom Project (/clients/mwp)
+            </a>
+          </div>
         </div>
-        {eventsData && <pre style={pre}>{JSON.stringify(eventsData, null, 2)}</pre>}
       </section>
 
-      <section style={card}>
-        <h2>Zoom</h2>
-        <p>Webhook endpoint: <code>{webhookUrl}</code></p>
+      {/* MWM AI Tools Hub */}
+      <section className="border rounded-lg p-6 space-y-4">
+        <h2 className="text-xl font-semibold">MWM AI Tools Hub</h2>
+        <p className="text-sm text-gray-500">
+          Internal dev endpoints for testing chat, email, FAQ, and Zoom tools.
+        </p>
+        <ul className="list-disc list-inside space-y-1 text-sm">
+          <li>
+            <a
+              href="/dev/chat-test"
+              className="text-blue-600 underline hover:no-underline"
+            >
+              Chat Test (/dev/chat-test)
+            </a>{" "}
+            <span className="text-xs text-green-600">existing</span>
+          </li>
+          <li>
+            <span className="text-gray-400">/dev/email-draft-test</span>{" "}
+            <span className="text-xs text-yellow-600">placeholder</span>
+          </li>
+          <li>
+            <span className="text-gray-400">/dev/email-logs</span>{" "}
+            <span className="text-xs text-yellow-600">placeholder</span>
+          </li>
+          <li>
+            <span className="text-gray-400">/dev/faq-test</span>{" "}
+            <span className="text-xs text-yellow-600">placeholder</span>
+          </li>
+          <li>
+            <span className="text-gray-400">/dev/zoom-test</span>{" "}
+            <span className="text-xs text-yellow-600">placeholder</span>
+          </li>
+        </ul>
       </section>
 
-      <footer style={{ marginTop: 40, opacity: 0.7 }}>
-        <a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms of Service</a>
-      </footer>
+      {/* Mailgun Section */}
+      <section className="border rounded-lg p-6 space-y-4">
+        <h2 className="text-xl font-semibold">Mailgun</h2>
+        <p className="text-sm text-gray-500">
+          Send test emails and inspect recent events.
+        </p>
+
+        {/* Test Email Form – you can wire this later to /api/mailgun/test */}
+        <div className="space-y-3">
+          <h3 className="text-md font-medium">Send Test Email</h3>
+          <form
+            action="/api/mailgun/test" // TODO: create this API route
+            method="POST"
+            className="space-y-3 max-w-md"
+          >
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium" htmlFor="to">
+                To
+              </label>
+              <input
+                id="to"
+                name="to"
+                type="email"
+                required
+                className="border rounded px-3 py-2 text-sm"
+                placeholder="you@example.com"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium" htmlFor="subject">
+                Subject
+              </label>
+              <input
+                id="subject"
+                name="subject"
+                type="text"
+                className="border rounded px-3 py-2 text-sm"
+                placeholder="Test from MWM Admin"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium" htmlFor="text">
+                Text
+              </label>
+              <textarea
+                id="text"
+                name="text"
+                rows={3}
+                className="border rounded px-3 py-2 text-sm"
+                placeholder="Hello from Mindfulness with Mind ✨"
+              />
+            </div>
+            <button
+              type="submit"
+              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded bg-black text-white hover:bg-gray-800"
+            >
+              Send Test Email
+            </button>
+          </form>
+        </div>
+
+        {/* Events Viewer placeholder */}
+        <div className="space-y-2 pt-4 border-t">
+          <h3 className="text-md font-medium">Events Viewer</h3>
+          <p className="text-xs text-gray-500">
+            Later: filters (date, event type) and a link to raw JSON per event.
+          </p>
+          <p className="text-xs text-gray-400">
+            Placeholder – wire to /api/mailgun/events when ready.
+          </p>
+        </div>
+      </section>
+
+      {/* Zoom Section */}
+      <section className="border rounded-lg p-6 space-y-4">
+        <h2 className="text-xl font-semibold">Zoom</h2>
+        <p className="text-sm text-gray-500">
+          Current webhook endpoint and integration status.
+        </p>
+
+        {/* For now, static/placeholder; later, read from config/env/DB */}
+        <div className="text-sm space-y-1">
+          <div className="font-mono break-all">
+            Current webhook endpoint:{" "}
+            <span className="text-gray-700">
+              https://your-domain.com/api/zoom/webhook
+            </span>
+          </div>
+          <div className="text-xs text-gray-500">
+            Later: fetch this from config/DB and show verification status.
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
-
-function tryParse(t) { try { return JSON.parse(t); } catch { return t; } }
-
-const card = { background:"#fff", border:"1px solid #eee", borderRadius:12, padding:16, margin:"16px 0", boxShadow:"0 1px 2px rgba(0,0,0,0.04)" };
-const input = { width:"100%", padding:"8px 10px", border:"1px solid #ddd", borderRadius:8, marginTop:4 };
-const button = { padding:"8px 12px", borderRadius:8, border:"1px solid #ccc", background:"#f7f7f7", cursor:"pointer" };
-const pre = { marginTop:12, background:"#f8f9fb", padding:12, borderRadius:8, overflow:"auto", maxHeight:320 };

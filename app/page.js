@@ -31,12 +31,12 @@ export default function HomePage() {
           </div>
 
           {/* center headings */}
-          <div>
+          <div className="center-headings">
             <h1 className="h1-main">Mindfulness with Mind</h1>
             <h2 className="h2-sub">
-              AI Automation for the
+              Thoughtful AI Automation
               <br />
-              Conscious
+              for Conscious Businesses
             </h2>
           </div>
 
@@ -54,19 +54,20 @@ export default function HomePage() {
 
         {/* body copy */}
         <section className="body-copy">
-          <p>Highly personalized AI Automation agents</p>
+          <p>Thoughtful AI automation agents for conscious businesses.</p>
           <p>
-            Free up yourself and your staff so that you can dive deeply into
-            coaching, supporting and elevating your clients!
+            Free yourself and your team to focus on the real work—while your
+            AI agents care for repetitive email, FAQs, and logistics.
           </p>
           <p>
-            Do what you do best while we support your clients in the best way
-            possible.
+            We design each agent specifically for life coaches, spiritual
+            teachers, retreat leaders, and conscious organizations, using your
+            materials, your tone, and your boundaries so your clients feel held,
+            not handled.
           </p>
           <p>
-            We intentionally design for conscious communities and have trained
-            our AI Agents to respond to your clients’ needs with warmth and
-            compassion.
+            We intentionally design for conscious communities and train every
+            agent to respond with clarity, warmth, and compassion.
           </p>
         </section>
       </main>

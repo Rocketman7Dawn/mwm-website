@@ -25,13 +25,13 @@ export default function AboutPage() {
           {/* Card: Cid */}
           <article className="about-card">
             <div className="about-top">
-              <img src="/cid.jpg" alt="Cid Isbell" className="about-photo" />
+              <img src="/cidbyfire.jpg" alt="Cid Isbell" className="about-photo" />
               <h2 className="about-name">Cid Isbell - Seeker</h2>
             </div>
             <p className="about-text">
               Cid has been a seeker and finder on a path to spiritual discovery
               for 30 years. He is pairing his tech expertise with his desire for
-              conscious expansion into new territories.
+              conscious expansion and journeying into new territories.
             </p>
           </article>
 
@@ -39,8 +39,8 @@ export default function AboutPage() {
           <article className="about-card">
             <div className="about-top">
               <img
-                src="/AIwithRedDots.jpg"
-                alt="Inspired AI artwork"
+                src="/Cora0.png"
+                alt="Cora AI Agent"
                 className="about-photo"
               />
               <h2 className="about-name">Cora - Inspired AI</h2>
