@@ -1,36 +1,11 @@
-"use client";
-
-import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
 import Header from "../../../components/Header";
+import SignInForm from "./SignInForm";
 
-const BG_SRC = "/Client%20Login.png"; // uses "Client Login.png" from /public
+const BG_SRC = "/Client%20Login.png"; // "Client Login.png" in /public
 
-export default function SignInPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const searchParams = useSearchParams();
-  // preserve callbackUrl from ?callbackUrl=/clients/mwp etc.
-  const callbackUrl = searchParams?.get("callbackUrl") || "/";
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      await signIn("credentials", {
-        redirect: true,
-        email,
-        password,
-        callbackUrl,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }
+// This is now a SERVER component that receives searchParams
+export default function SignInPage({ searchParams }) {
+  const callbackUrl = searchParams?.callbackUrl || "/";
 
   return (
     <div
@@ -53,71 +28,8 @@ export default function SignInPage() {
             <h1 className="login-title">Client Login</h1>
           </div>
 
-          {/* Login card */}
-          <div className="login-card">
-            <p
-              className="contact-p"
-              style={{ marginTop: 0, marginBottom: 16 }}
-            >
-              Sign in with your client email and password to access your
-              project space.
-            </p>
-
-            <form onSubmit={handleSubmit}>
-              <div className="login-emailRow">
-                <label className="login-label" htmlFor="email">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  className="login-input"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="login-emailRow">
-                <label className="login-label" htmlFor="password">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  className="login-input"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="login-btn"
-                disabled={loading}
-                style={{ marginTop: 12 }}
-              >
-                {loading ? "Signing in..." : "Sign in"}
-              </button>
-            </form>
-
-            <p
-              className="contact-p"
-              style={{ marginTop: 18, fontSize: "0.9rem", opacity: 0.9 }}
-            >
-              Having trouble signing in? Reach out to{" "}
-              <a
-                href="mailto:cid@mindfulnesswithmind.com"
-                className="contact-link"
-              >
-                cid@mindfulnesswithmind.com
-              </a>
-              .
-            </p>
-          </div>
+          {/* Client form gets callbackUrl as a prop */}
+          <SignInForm callbackUrl={callbackUrl} />
         </div>
       </main>
     </div>
