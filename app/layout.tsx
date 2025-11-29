@@ -2,7 +2,16 @@
 
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
-export default function RootLayout({ children }) {
+export const metadata = {
+  // whatever you already had here…
+  // title, description, etc.
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body>
@@ -11,19 +20,4 @@ export default function RootLayout({ children }) {
       </body>
     </html>
   );
-  export default function RootLayout({
-    children,
-  }: {
-    children: React.ReactNode;
-  }) {
-    return (
-      <html lang="en">
-        <body>
-          {children}
-          <SpeedInsights />
-        </body>
-      </html>
-    );
-  }
-
 }
