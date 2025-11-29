@@ -1,27 +1,34 @@
 // lib/getClientEmails.ts
-// Temporary stub implementation so the build passes.
-// We'll wire this to Supabase once the email corpus is ready.
+import { supabaseAdmin } from "./supabaseClient";
+
+export type ClientEmailRecord = {
+  id: string;
+  client_slug: string;
+  subject: string | null;
+  body_text: string | null;
+  received_at: string;
+  from_email: string | null;
+  to_email: string | null;
+  source: string | null;
+};
 
 export async function getRecentEmailsForClient(
   clientSlug: string,
   limit = 10
-): Promise<
-  Array<{
-    id: string;
-    subject: string;
-    body_text: string;
-    received_at: string;
-    from_email: string;
-    source: string;
-  }>
-> {
-  console.warn(
-    "[getRecentEmailsForClient] Stub called for client:",
-    clientSlug,
-    "limit:",
-    limit
-  );
+): Promise<ClientEmailRecord[]> {
+  const { data, error } = await supabaseAdmin
+    .from("client_email_corpus")
+    .select(
+      "id, client_slug, subject, body_text, received_at, from_email, to_email, source"
+    )
+    .eq("client_slug", clientSlug)
+    .order("received_at", { ascending: false })
+    .limit(limit);
 
-  // For now, return an empty list.
-  return [];
+  if (error) {
+    console.error("[getRecentEmailsForClient] Error:", error);
+    throw error;
+  }
+
+  return (data as ClientEmailRecord[]) ?? [];
 }

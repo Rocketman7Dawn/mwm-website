@@ -1,43 +1,26 @@
 // app/api/email/ingest/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { ingestEmail } from '@/lib/emailIngest';
+import { NextResponse } from "next/server";
+import { ingestInboundEmail } from "@/lib/emailIngest";
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const payload = await req.json();
+    const body = await req.json();
 
-    // Shape this to match your provider.
-    // Example if you're simulating manually:
-    // {
-    //   "to": "mwm-intake+iva@mindfulnesswithmind.com",
-    //   "from": "iva@example.com",
-    //   "subject": "New retreat idea",
-    //   "bodyText": "Hey Cid, I was thinking about..."
-    // }
-
-    const { to, from, subject, bodyText, bodyHtml, receivedAt } = payload;
-
-    if (!to || !from) {
-      return NextResponse.json(
-        { error: 'Missing "to" or "from" fields' },
-        { status: 400 }
-      );
-    }
-
-    const emailRow = await ingestEmail({
-      to,
-      from,
-      subject,
-      bodyText,
-      bodyHtml,
-      receivedAt,
+    const saved = await ingestInboundEmail({
+      clientSlug: body.clientSlug,
+      subject: body.subject ?? null,
+      bodyText: body.bodyText ?? null,
+      fromEmail: body.fromEmail ?? null,
+      toEmail: body.toEmail ?? null,
+      receivedAt: body.receivedAt ?? null,
+      source: body.source ?? "manual",
     });
 
-    return NextResponse.json({ success: true, emailId: emailRow.id });
+    return NextResponse.json({ ok: true, id: saved.id });
   } catch (err: any) {
-    console.error('Error ingesting email:', err);
+    console.error("[/api/email/ingest] Error:", err);
     return NextResponse.json(
-      { error: err.message || 'Unknown error' },
+      { ok: false, error: err?.message ?? "Unknown error" },
       { status: 500 }
     );
   }

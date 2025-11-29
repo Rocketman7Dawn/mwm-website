@@ -1,13 +1,51 @@
 // lib/emailAssist.ts
-// Temporary implementation so API routes can import getClientEmailContext
-// without breaking the build. We'll wire in real logic later.
+import {
+  ClientEmailRecord,
+  getRecentEmailsForClient,
+} from "./getClientEmails";
 
-export async function getClientEmailContext(...args: any[]): Promise<any> {
-  // TODO: implement real client email context lookup.
-  // For now we just return a simple object so callers have something to work with.
+export type EmailContext = {
+  contextReady: boolean;
+  contextText: string;
+  emails: ClientEmailRecord[];
+};
+
+export async function getClientEmailContext(
+  clientSlug: string,
+  limit = 20
+): Promise<EmailContext> {
+  const emails = await getRecentEmailsForClient(clientSlug, limit);
+
+  if (!emails.length) {
+    return {
+      contextReady: true,
+      contextText: "No prior emails found for this client.",
+      emails: [],
+    };
+  }
+
+  const contextLines = emails.map((e) => {
+    const date = e.received_at;
+    const from = e.from_email ?? "unknown";
+    const subject = e.subject ?? "";
+    const body = (e.body_text ?? "").slice(0, 1200);
+
+    return [
+      "----- EMAIL -----",
+      `Date: ${date}`,
+      `From: ${from}`,
+      `Subject: ${subject}`,
+      "",
+      body,
+      "",
+    ].join("\n");
+  });
+
+  const contextText = contextLines.join("\n");
+
   return {
-    contextReady: false,
-    note: "getClientEmailContext is a stub; implement real logic in lib/emailAssist.ts",
-    args,
+    contextReady: true,
+    contextText,
+    emails,
   };
 }
