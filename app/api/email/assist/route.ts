@@ -40,7 +40,7 @@ Your job is to draft a helpful reply.
 Guidelines:
 - Be warm, clear, and grounded. No hype.
 - If details like dates, prices, or private links are uncertain, say you'll confirm rather than inventing.
-- Match the language and tone of the incoming email (formal/informal).
+- Match the language and tone of the incoming email (formal or informal).
 - Keep the reply reasonably concise and scannable.
 - Do NOT include "Draft:" or meta commentary. Just write the email body.
 `;
@@ -56,16 +56,16 @@ ${incomingEmailText}
 If helpful, the sender is: ${fromEmail ?? "unknown"}
 `;
 
-    const response = await openai.responses.create({
+    const completion = await openai.chat.completions.create({
       model: "gpt-4.1-mini",
-      input: [
+      messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
     });
 
     const replyText =
-      response.output[0].content[0].text ??
+      completion.choices[0]?.message?.content ??
       "I'm sorry, I couldn't generate a reply.";
 
     return NextResponse.json({
