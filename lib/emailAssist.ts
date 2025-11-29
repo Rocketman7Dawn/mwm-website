@@ -1,6 +1,4 @@
 // lib/emailAssist.ts
-// Simple bridge module so imports from "@/lib/emailAssist"
-// can reuse the logic from "./emailIngest".
+// Bridge module so API routes can import from "@/lib/emailAssist"
 
-export * from "./emailIngest";
-export { default } from "./emailIngest";
+export { getClientEmailContext } from "./getClientEmails";
