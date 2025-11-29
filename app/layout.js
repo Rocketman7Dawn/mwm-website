@@ -1,6 +1,7 @@
 // app/layout.js
 import "./globals.css";
 import { Yeseva_One } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const yeseva = Yeseva_One({
   weight: "400",            // Yeseva One ships only 400; it looks naturally bold
@@ -17,7 +18,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={yeseva.variable}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <SpeedInsights />
+      </body>
     </html>
   );
 }
