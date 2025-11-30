@@ -18,7 +18,7 @@ const openai = new OpenAI({
  * Priority:
  * 1) Explicit Mailgun variables (client_slug, tag-client-slug)
  * 2) Original "To" header like: "Name <mwm-intake+mwp@mindfulnesswithmind.com>"
- * 3) Recipient address Mailgun saw (e.g. "intake@sandbox....")
+ * 3) Recipient address Mailgun saw
  * 4) Fallback to "mwp"
  */
 function getClientSlugFromMailgun(formData: FormData): string {
@@ -30,23 +30,20 @@ function getClientSlugFromMailgun(formData: FormData): string {
   if (explicitSlug) return explicitSlug.toLowerCase();
 
   // 2) Try to parse from original "To" header
-  // Example header: "Cid Isbell <mwm-intake+mwp@mindfulnesswithmind.com>"
+  // Example: "Cid Isbell <mwm-intake+mwp@mindfulnesswithmind.com>"
   const toHeaderRaw =
     ((formData.get("To") || formData.get("to")) as string) || "";
   const toHeader = toHeaderRaw.trim();
 
-  // Look for mwm-intake+slug@...
   const match = toHeader.match(/mwm-intake\+([a-z0-9_]+)@/i);
   if (match && match[1]) {
     return match[1].toLowerCase(); // e.g. "mwp"
   }
 
   // 3) Fallback: derive from the actual recipient Mailgun saw
-  // e.g. "intake@sandbox...." or "mwp@mindfulnesswithmind.com"
   const recipient = ((formData.get("recipient") as string) || "").trim();
   if (recipient) {
     const localPart = recipient.split("@")[0]; // "intake" or "mwp+something"
-    // If there's a +, use the last segment as slug, else the whole localPart
     const slugCandidate = localPart.split("+").pop() || localPart;
     if (slugCandidate) {
       return slugCandidate.toLowerCase();
@@ -57,13 +54,42 @@ function getClientSlugFromMailgun(formData: FormData): string {
   return "mwp";
 }
 
+/**
+ * Extract bare email from something like:
+ * "Cid Isbell <cidisbell@gmail.com>" or just "cidisbell@gmail.com"
+ */
+function extractEmail(addr: string): string {
+  const trimmed = addr.trim();
+  if (!trimmed) return "";
+
+  const angleMatch = trimmed.match(/<([^>]+)>/);
+  if (angleMatch && angleMatch[1]) {
+    return angleMatch[1].trim();
+  }
+
+  // Fallback: return last "word" if it's email-ish, else the whole string
+  const parts = trimmed.split(/\s+/);
+  return parts[parts.length - 1].trim();
+}
+
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
 
+    // Mailgun envelope recipient (where Mailgun delivered)
     const recipient = ((formData.get("recipient") as string) || "").trim();
-    const sender = ((formData.get("sender") as string) || "").trim();
+
+    // Mailgun envelope sender (forwarder, often SRS address)
+    const envelopeSender =
+      ((formData.get("sender") as string) || "").trim();
+
     const subject = ((formData.get("subject") as string) || "").trim();
+
+    // Original From header (the human sender)
+    const fromHeaderRaw =
+      ((formData.get("from") || formData.get("From")) as string) || "";
+    const originalFromEmail =
+      extractEmail(fromHeaderRaw) || envelopeSender || "";
 
     // Mailgun gives us either "stripped-text" or "body-plain"
     const bodyPlain =
@@ -82,13 +108,13 @@ export async function POST(req: Request) {
       clientSlug,
       subject: subject || null,
       bodyText: bodyPlain || null,
-      fromEmail: sender || null,
-      toEmail: recipient || null,
+      fromEmail: originalFromEmail || null, // store the real human sender
+      toEmail: recipient || null, // intake address (Mailgun recipient)
       receivedAt,
       source: "mailgun_inbound",
     });
 
-    // 2) Build full context for this client (recent emails, etc.)
+    // 2) Build full context for this client
     const context = await getClientEmailContext(clientSlug, 20);
 
     const systemPrompt = `
@@ -118,7 +144,7 @@ Recent emails and context for client "${clientSlug}":
 ${context.contextText}
 
 ---
-New incoming email (from ${sender || "unknown"} to ${
+New incoming email (from ${originalFromEmail || "unknown"} to ${
       recipient || "unknown"
     }):
 ${incomingEmailText}
@@ -137,15 +163,14 @@ ${incomingEmailText}
       completion.choices[0]?.message?.content ??
       "I'm sorry, I couldn't generate a reply.";
 
-    // 4) Send the reply via Mailgun, fully automated
+    // 4) Send the reply via Mailgun to the ORIGINAL sender
     const replySubject = subject ? `Re: ${subject}` : "Re: your message";
 
     await sendMailgunEmail({
-      to: sender,
+      to: originalFromEmail,             // <-- real Gmail, not SRS
       subject: replySubject,
       text: replyText,
-      // we set Reply-To so they can reply back into the same pipeline if needed
-      replyTo: recipient || undefined,
+      replyTo: recipient || undefined,   // replies can flow back through intake
     });
 
     // 5) Log the outgoing reply into Supabase as well
@@ -153,8 +178,8 @@ ${incomingEmailText}
       clientSlug,
       subject: replySubject,
       bodyText: replyText,
-      fromEmail: recipient || null, // from the client to the subscriber
-      toEmail: sender || null,
+      fromEmail: recipient || null,      // from intake/client to subscriber
+      toEmail: originalFromEmail || null,
       receivedAt: new Date(),
       source: "assistant_reply",
     });
@@ -164,6 +189,8 @@ ${incomingEmailText}
       inboundId: savedInbound.id,
       autoReplied: true,
       clientSlug,
+      originalFromEmail,
+      envelopeSender,
     });
   } catch (err: any) {
     console.error("[/api/email/inbound-mailgun] Error:", err);
