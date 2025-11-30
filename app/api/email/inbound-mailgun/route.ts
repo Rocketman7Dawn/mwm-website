@@ -6,7 +6,7 @@ import { ingestInboundEmail } from "@/lib/emailIngest";
 import { getClientEmailContext } from "@/lib/emailAssist";
 import { sendMailgunEmail } from "@/lib/mailgunSend";
 
-export const runtime = "nodejs"; // we use Buffer + Node fetch
+export const runtime = "nodejs"; // we use Node APIs
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -22,15 +22,12 @@ const openai = new OpenAI({
  * 4) Fallback to "mwp"
  */
 function getClientSlugFromMailgun(formData: FormData): string {
-  // 1) Explicit slug from Mailgun user variables / tags
   const explicitSlug =
     (formData.get("client_slug") as string) ||
     (formData.get("tag-client-slug") as string) ||
     null;
   if (explicitSlug) return explicitSlug.toLowerCase();
 
-  // 2) Try to parse from original "To" header
-  // Example: "Cid Isbell <mwm-intake+mwp@mindfulnesswithmind.com>"
   const toHeaderRaw =
     ((formData.get("To") || formData.get("to")) as string) || "";
   const toHeader = toHeaderRaw.trim();
@@ -40,23 +37,21 @@ function getClientSlugFromMailgun(formData: FormData): string {
     return match[1].toLowerCase(); // e.g. "mwp"
   }
 
-  // 3) Fallback: derive from the actual recipient Mailgun saw
   const recipient = ((formData.get("recipient") as string) || "").trim();
   if (recipient) {
-    const localPart = recipient.split("@")[0]; // "intake" or "mwp+something"
+    const localPart = recipient.split("@")[0];
     const slugCandidate = localPart.split("+").pop() || localPart;
     if (slugCandidate) {
       return slugCandidate.toLowerCase();
     }
   }
 
-  // 4) Final fallback
   return "mwp";
 }
 
 /**
  * Extract bare email from something like:
- * "Cid Isbell <cidisbell@gmail.com>" or just "cidisbell@gmail.com"
+ * "Name <user@example.com>" or just "user@example.com"
  */
 function extractEmail(addr: string): string {
   const trimmed = addr.trim();
@@ -67,31 +62,71 @@ function extractEmail(addr: string): string {
     return angleMatch[1].trim();
   }
 
-  // Fallback: return last "word" if it's email-ish, else the whole string
   const parts = trimmed.split(/\s+/);
   return parts[parts.length - 1].trim();
+}
+
+/**
+ * Get the original human sender from Mailgun POST.
+ * Priority:
+ * 1) "From" header inside message-headers JSON
+ * 2) "from" / "From" field if present
+ * 3) Fallback to envelope sender (SRS) if nothing else
+ */
+function getOriginalFromEmail(formData: FormData): {
+  email: string;
+  headerValue: string;
+  envelopeSender: string;
+} {
+  const envelopeSender =
+    ((formData.get("sender") as string) || "").trim() || "";
+
+  let fromHeaderValue = "";
+
+  const messageHeadersRaw = formData.get("message-headers") as string | null;
+  if (messageHeadersRaw) {
+    try {
+      const headers = JSON.parse(messageHeadersRaw) as [string, string][];
+      const fromPair = headers.find(
+        ([name]) => name.toLowerCase() === "from"
+      );
+      if (fromPair && fromPair[1]) {
+        fromHeaderValue = fromPair[1];
+      }
+    } catch (e) {
+      console.error(
+        "[inbound-mailgun] Failed to parse message-headers JSON:",
+        e
+      );
+    }
+  }
+
+  if (!fromHeaderValue) {
+    const fromField =
+      ((formData.get("from") || formData.get("From")) as string) || "";
+    fromHeaderValue = fromField;
+  }
+
+  const originalEmail =
+    extractEmail(fromHeaderValue) || extractEmail(envelopeSender) || "";
+
+  return {
+    email: originalEmail,
+    headerValue: fromHeaderValue,
+    envelopeSender,
+  };
 }
 
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
 
-    // Mailgun envelope recipient (where Mailgun delivered)
     const recipient = ((formData.get("recipient") as string) || "").trim();
-
-    // Mailgun envelope sender (forwarder, often SRS address)
-    const envelopeSender =
-      ((formData.get("sender") as string) || "").trim();
-
     const subject = ((formData.get("subject") as string) || "").trim();
 
-    // Original From header (the human sender)
-    const fromHeaderRaw =
-      ((formData.get("from") || formData.get("From")) as string) || "";
-    const originalFromEmail =
-      extractEmail(fromHeaderRaw) || envelopeSender || "";
+    const { email: originalFromEmail, headerValue: fromHeaderValue, envelopeSender } =
+      getOriginalFromEmail(formData);
 
-    // Mailgun gives us either "stripped-text" or "body-plain"
     const bodyPlain =
       ((formData.get("stripped-text") ||
         formData.get("body-plain")) as string) || "";
@@ -103,13 +138,13 @@ export async function POST(req: Request) {
     const receivedAt =
       timestamp != null ? new Date(Number(timestamp) * 1000) : new Date();
 
-    // 1) Ingest inbound email into Supabase
+    // 1) Ingest inbound email into Supabase (store REAL sender)
     const savedInbound = await ingestInboundEmail({
       clientSlug,
       subject: subject || null,
       bodyText: bodyPlain || null,
-      fromEmail: originalFromEmail || null, // store the real human sender
-      toEmail: recipient || null, // intake address (Mailgun recipient)
+      fromEmail: originalFromEmail || null,
+      toEmail: recipient || null,
       receivedAt,
       source: "mailgun_inbound",
     });
@@ -147,6 +182,7 @@ ${context.contextText}
 New incoming email (from ${originalFromEmail || "unknown"} to ${
       recipient || "unknown"
     }):
+
 ${incomingEmailText}
 `.trim();
 
@@ -163,14 +199,14 @@ ${incomingEmailText}
       completion.choices[0]?.message?.content ??
       "I'm sorry, I couldn't generate a reply.";
 
-    // 4) Send the reply via Mailgun to the ORIGINAL sender
+    // 4) Send the reply via Mailgun to the ORIGINAL human sender
     const replySubject = subject ? `Re: ${subject}` : "Re: your message";
 
     await sendMailgunEmail({
-      to: originalFromEmail,             // <-- real Gmail, not SRS
+      to: originalFromEmail, // <-- Gmail, not SRS
       subject: replySubject,
       text: replyText,
-      replyTo: recipient || undefined,   // replies can flow back through intake
+      replyTo: recipient || undefined, // replies can go back through intake
     });
 
     // 5) Log the outgoing reply into Supabase as well
@@ -178,7 +214,7 @@ ${incomingEmailText}
       clientSlug,
       subject: replySubject,
       bodyText: replyText,
-      fromEmail: recipient || null,      // from intake/client to subscriber
+      fromEmail: recipient || null, // from intake/client to subscriber
       toEmail: originalFromEmail || null,
       receivedAt: new Date(),
       source: "assistant_reply",
@@ -190,6 +226,7 @@ ${incomingEmailText}
       autoReplied: true,
       clientSlug,
       originalFromEmail,
+      fromHeaderValue,
       envelopeSender,
     });
   } catch (err: any) {
